@@ -623,6 +623,10 @@
   const EMAILJS_TEMPLATE_ID = 'template_lr1yo1c';
   const NOTIFY_EMAIL        = 'asmaaalwahby@gmail.com';
 
+  // تيليجرام
+  const TELEGRAM_TOKEN   = '8640215047:AAH1sxiDbdRA0Reh_bswPe-4ZOfB4YLN1Rg';
+  const TELEGRAM_CHAT_ID = '124103655';
+
   emailjs.init({ publicKey: EMAILJS_PUBLIC_KEY });
 </script>
 </head>
@@ -963,11 +967,41 @@ function sendOrderNotification(reqNum, itemCount, priority, requester, dept) {
   };
 
   emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, templateParams)
-    .then(() => showToast('📧 تم إرسال إشعار الإيميل بنجاح'))
-    .catch(err => {
-      console.error('EmailJS error:', err);
-      showToast('⚠️ تعذّر إرسال الإيميل — تحقق من المفاتيح');
-    });
+    .then(() => {})
+    .catch(err => console.error('EmailJS error:', err));
+
+  // إرسال تيليجرام
+  sendTelegramNotification(reqNum, itemCount, priority, requester, dept);
+}
+
+function sendTelegramNotification(reqNum, itemCount, priority, requester, dept) {
+  const priorityIcon = priority === 'عاجل' ? '🔴' : priority === 'متوسط' ? '🟡' : '🟢';
+  const itemsText = basket.map((b, i) => {
+    const d = drugs.find(x => x.id === b.drugId);
+    return `${i+1}. ${d.name} — ${b.qty} ${d.unit} (${getPct(d)}%)`;
+  }).join('%0A');
+
+  const msg =
+    `🔔 *طلب إعادة تعبئة جديد*%0A` +
+    `━━━━━━━━━━━━━━━━━━%0A` +
+    `📋 رقم الطلب: ${reqNum}%0A` +
+    `🏥 القسم: ${dept}%0A` +
+    `👤 مقدم الطلب: ${requester}%0A` +
+    `${priorityIcon} الأولوية: ${priority}%0A` +
+    `💊 عدد الأصناف: ${itemCount} صنف%0A` +
+    `🕐 الوقت: ${new Date().toLocaleTimeString('ar-SA')}%0A` +
+    `━━━━━━━━━━━━━━━━━━%0A` +
+    `الأدوية:%0A${itemsText}`;
+
+  const url = `https://api.telegram.org/bot${TELEGRAM_TOKEN}/sendMessage?chat_id=${TELEGRAM_CHAT_ID}&text=${msg}`;
+
+  fetch(url)
+    .then(r => r.json())
+    .then(data => {
+      if (data.ok) showToast('✅ تم إرسال تنبيه تيليجرام');
+      else showToast('⚠️ خطأ: ' + data.description);
+    })
+    .catch(() => showToast('⚠️ تعذّر الاتصال بتيليجرام'));
 }
 
 function showConfirmDialog(title, subtitle, onConfirm) {
