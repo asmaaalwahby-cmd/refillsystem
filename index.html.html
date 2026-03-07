@@ -623,10 +623,9 @@
   const EMAILJS_TEMPLATE_ID = 'template_lr1yo1c';
   const NOTIFY_EMAIL        = 'asmaaalwahby@gmail.com';
 
-  // تيليجرام
-  const _t1 = '8640215047', _t2 = ':AAH1sxiDbdRA0Reh_bswPe-4ZOfB4YLN1Rg';
-  const TELEGRAM_TOKEN   = _t1 + _t2;
-  const TELEGRAM_CHAT_ID = '124103655';
+  // تيليجرام — يُحمَّل من localStorage
+  let TELEGRAM_TOKEN   = localStorage.getItem('tg_token') || '';
+  let TELEGRAM_CHAT_ID = localStorage.getItem('tg_chat')  || '';
 
   emailjs.init({ publicKey: EMAILJS_PUBLIC_KEY });
 </script>
@@ -642,7 +641,10 @@
       <p>قسم التخدير — المستودع الصيدلاني</p>
     </div>
   </div>
-  <div class="header-date" id="headerDate"></div>
+  <div style="display:flex;align-items:center;gap:10px;">
+    <div class="header-date" id="headerDate"></div>
+    <button onclick="openSettings()" style="background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.1);color:#94a3b8;border-radius:10px;padding:8px 14px;cursor:pointer;font-family:Cairo,sans-serif;font-size:13px;">⚙️ إعدادات</button>
+  </div>
 </div>
 
 <!-- Main -->
@@ -886,6 +888,34 @@
 <!-- Toast -->
 <div class="toast" id="toast"></div>
 
+<!-- Settings Modal -->
+<div class="modal-overlay" id="settingsModal">
+  <div class="modal" style="max-width:440px">
+    <div class="modal-header">
+      <div class="modal-title">⚙️ إعدادات التنبيهات</div>
+      <button class="close-btn" onclick="closeSettings()">✕</button>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:14px;">
+      <div class="form-group">
+        <label>توكن بوت تيليجرام</label>
+        <input type="text" id="settingToken" placeholder="مثال: 123456:ABC..." style="direction:ltr">
+      </div>
+      <div class="form-group">
+        <label>Chat ID الخاص بك</label>
+        <input type="text" id="settingChat" placeholder="مثال: 124103655" style="direction:ltr">
+      </div>
+      <div style="background:rgba(0,201,167,0.08);border:1px solid rgba(0,201,167,0.2);border-radius:10px;padding:12px;font-size:12px;color:#94a3b8;line-height:1.8">
+        للحصول على التوكن: تواصل مع @BotFather<br>
+        للحصول على Chat ID: تواصل مع @userinfobot
+      </div>
+      <div class="form-actions" style="margin-top:4px">
+        <button class="btn-secondary" onclick="closeSettings()">إلغاء</button>
+        <button class="btn-primary" onclick="saveSettings()">💾 حفظ</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <script>
 // ======== DATA ========
 let drugs = [
@@ -976,6 +1006,10 @@ function sendOrderNotification(reqNum, itemCount, priority, requester, dept) {
 }
 
 function sendTelegramNotification(reqNum, itemCount, priority, requester, dept) {
+  // اقرأ التوكن من localStorage في كل مرة
+  const TELEGRAM_TOKEN   = localStorage.getItem('tg_token') || '';
+  const TELEGRAM_CHAT_ID = localStorage.getItem('tg_chat')  || '';
+  if (!TELEGRAM_TOKEN || !TELEGRAM_CHAT_ID) { showToast('⚠️ أدخل إعدادات تيليجرام أولاً'); return; }
   const priorityIcon = priority === 'عاجل' ? '🔴' : priority === 'متوسط' ? '🟡' : '🟢';
   const itemsText = basket.map((b, i) => {
     const d = drugs.find(x => x.id === b.drugId);
@@ -1409,6 +1443,28 @@ function resetForm() {
   document.getElementById('reqNotes').value = '';
 }
 // (kept for compatibility)
+
+function openSettings() {
+  document.getElementById('settingToken').value = localStorage.getItem('tg_token') || '';
+  document.getElementById('settingChat').value  = localStorage.getItem('tg_chat')  || '';
+  document.getElementById('settingsModal').classList.add('open');
+}
+
+function closeSettings() {
+  document.getElementById('settingsModal').classList.remove('open');
+}
+
+function saveSettings() {
+  const token = document.getElementById('settingToken').value.trim();
+  const chat  = document.getElementById('settingChat').value.trim();
+  if (!token || !chat) { showToast('⚠️ أدخل التوكن والـ Chat ID'); return; }
+  localStorage.setItem('tg_token', token);
+  localStorage.setItem('tg_chat',  chat);
+  TELEGRAM_TOKEN   = token;
+  TELEGRAM_CHAT_ID = chat;
+  closeSettings();
+  showToast('✅ تم حفظ إعدادات تيليجرام');
+}
 
 function showToast(msg) {
   const t = document.getElementById('toast');
