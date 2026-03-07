@@ -3,705 +3,247 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>نظام إعادة التعبئة - قسم التخدير</title>
-<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;500;600;700;900&display=swap" rel="stylesheet">
+<title>نظام إعادة تعبئة الأدوية</title>
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&display=swap" rel="stylesheet">
 <style>
-  :root {
-    --navy: #0a1628;
-    --navy-mid: #132240;
-    --blue: #1a4a8a;
-    --accent: #00c9a7;
-    --accent2: #f59e0b;
-    --danger: #ef4444;
-    --warning: #f59e0b;
-    --ok: #10b981;
-    --text: #e2e8f0;
-    --text-muted: #94a3b8;
-    --border: rgba(255,255,255,0.08);
-    --card: rgba(255,255,255,0.04);
-  }
-
-  * { margin: 0; padding: 0; box-sizing: border-box; }
-
-  body {
-    font-family: 'Cairo', sans-serif;
-    background: var(--navy);
-    color: var(--text);
-    min-height: 100vh;
-  }
-
-  /* Header */
-  .header {
-    background: linear-gradient(135deg, var(--navy-mid), #0d1f3c);
-    border-bottom: 1px solid var(--border);
-    padding: 18px 32px;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    position: sticky;
-    top: 0;
-    z-index: 100;
-    backdrop-filter: blur(10px);
-  }
-
-  .header-title {
-    display: flex;
-    align-items: center;
-    gap: 14px;
-  }
-
-  .logo-icon {
-    width: 44px; height: 44px;
-    background: linear-gradient(135deg, var(--accent), #0099ff);
-    border-radius: 12px;
-    display: flex; align-items: center; justify-content: center;
-    font-size: 22px;
-  }
-
-  .header h1 { font-size: 18px; font-weight: 700; color: #fff; }
-  .header p { font-size: 12px; color: var(--text-muted); }
-
-  .header-date {
-    font-size: 13px;
-    color: var(--text-muted);
-    background: var(--card);
-    padding: 8px 16px;
-    border-radius: 20px;
-    border: 1px solid var(--border);
-  }
-
-  /* Main layout */
-  .main { padding: 28px 32px; max-width: 1300px; margin: 0 auto; }
-
-  /* Stats bar */
-  .stats-bar {
-    display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: 16px;
-    margin-bottom: 28px;
-  }
-
-  .stat-card {
-    background: var(--card);
-    border: 1px solid var(--border);
-    border-radius: 14px;
-    padding: 18px 20px;
-    display: flex;
-    align-items: center;
-    gap: 14px;
-    transition: transform 0.2s;
-  }
-
-  .stat-card:hover { transform: translateY(-2px); }
-
-  .stat-icon {
-    width: 46px; height: 46px;
-    border-radius: 12px;
-    display: flex; align-items: center; justify-content: center;
-    font-size: 20px;
-    flex-shrink: 0;
-  }
-
-  .stat-icon.total { background: rgba(26, 74, 138, 0.3); }
-  .stat-icon.alert { background: rgba(239, 68, 68, 0.2); }
-  .stat-icon.warning { background: rgba(245, 158, 11, 0.2); }
-  .stat-icon.ok { background: rgba(16, 185, 129, 0.2); }
-
-  .stat-num { font-size: 28px; font-weight: 900; line-height: 1; }
-  .stat-label { font-size: 12px; color: var(--text-muted); margin-top: 3px; }
-
-  /* Section title */
-  .section-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    margin-bottom: 16px;
-  }
-
-  .section-title {
-    font-size: 15px;
-    font-weight: 700;
-    color: #fff;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-  }
-
-  /* Tabs */
-  .tabs {
-    display: flex;
-    gap: 8px;
-    margin-bottom: 24px;
-    background: var(--card);
-    padding: 6px;
-    border-radius: 14px;
-    border: 1px solid var(--border);
-    width: fit-content;
-  }
-
-  .tab {
-    padding: 8px 20px;
-    border-radius: 10px;
-    font-family: 'Cairo', sans-serif;
-    font-size: 13px;
-    font-weight: 600;
-    cursor: pointer;
-    border: none;
-    background: transparent;
-    color: var(--text-muted);
-    transition: all 0.2s;
-  }
-
-  .tab.active {
-    background: var(--blue);
-    color: #fff;
-  }
-
-  /* Inventory table */
-  .inventory-container {
-    background: var(--card);
-    border: 1px solid var(--border);
-    border-radius: 16px;
-    overflow: hidden;
-  }
-
-  .table-toolbar {
-    padding: 16px 20px;
-    border-bottom: 1px solid var(--border);
-    display: flex;
-    align-items: center;
-    gap: 12px;
-  }
-
-  .search-input {
-    background: rgba(255,255,255,0.06);
-    border: 1px solid var(--border);
-    border-radius: 10px;
-    padding: 9px 14px;
-    color: var(--text);
-    font-family: 'Cairo', sans-serif;
-    font-size: 13px;
-    width: 240px;
-    outline: none;
-    transition: border-color 0.2s;
-  }
-
-  .search-input:focus { border-color: var(--accent); }
-  .search-input::placeholder { color: var(--text-muted); }
-
-  .filter-btn {
-    padding: 9px 16px;
-    border-radius: 10px;
-    border: 1px solid var(--border);
-    background: transparent;
-    color: var(--text-muted);
-    font-family: 'Cairo', sans-serif;
-    font-size: 12px;
-    cursor: pointer;
-    transition: all 0.2s;
-  }
-
-  .filter-btn:hover, .filter-btn.active { background: var(--blue); color: #fff; border-color: var(--blue); }
-
-  table {
-    width: 100%;
-    border-collapse: collapse;
-  }
-
-  th {
-    background: rgba(255,255,255,0.03);
-    padding: 12px 16px;
-    font-size: 12px;
-    font-weight: 600;
-    color: var(--text-muted);
-    text-align: right;
-    border-bottom: 1px solid var(--border);
-  }
-
-  td {
-    padding: 13px 16px;
-    font-size: 13px;
-    border-bottom: 1px solid rgba(255,255,255,0.04);
-    vertical-align: middle;
-  }
-
-  tr:last-child td { border-bottom: none; }
-  tr:hover td { background: rgba(255,255,255,0.02); }
-
-  /* Progress bar */
-  .progress-wrap {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-  }
-
-  .progress-bar {
-    flex: 1;
-    height: 6px;
-    background: rgba(255,255,255,0.08);
-    border-radius: 10px;
-    overflow: hidden;
-  }
-
-  .progress-fill {
-    height: 100%;
-    border-radius: 10px;
-    transition: width 0.5s ease;
-  }
-
-  .pct-text { font-size: 12px; font-weight: 700; min-width: 36px; }
-
-  /* Status badge */
-  .badge {
-    display: inline-flex;
-    align-items: center;
-    gap: 5px;
-    padding: 4px 10px;
-    border-radius: 20px;
-    font-size: 11px;
-    font-weight: 700;
-  }
-
-  .badge.critical { background: rgba(239,68,68,0.15); color: #f87171; border: 1px solid rgba(239,68,68,0.3); }
-  .badge.warning { background: rgba(245,158,11,0.15); color: #fbbf24; border: 1px solid rgba(245,158,11,0.3); }
-  .badge.ok { background: rgba(16,185,129,0.15); color: #34d399; border: 1px solid rgba(16,185,129,0.3); }
-
-  .dot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
-
-  /* Action btn */
-  .action-btn {
-    padding: 6px 14px;
-    border-radius: 8px;
-    font-family: 'Cairo', sans-serif;
-    font-size: 12px;
-    font-weight: 600;
-    cursor: pointer;
-    border: none;
-    transition: all 0.2s;
-  }
-
-  .btn-request {
-    background: linear-gradient(135deg, var(--accent), #0099dd);
-    color: #fff;
-  }
-
-  .btn-request:hover { opacity: 0.85; transform: scale(1.03); }
-  .btn-disabled { background: rgba(255,255,255,0.05); color: var(--text-muted); cursor: default; }
-
-  /* Form panel */
-  .form-panel {
-    display: none;
-    background: var(--card);
-    border: 1px solid var(--border);
-    border-radius: 16px;
-    padding: 28px;
-  }
-
-  .form-panel.active { display: block; }
-
-  .form-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 16px;
-    margin-bottom: 20px;
-  }
-
-  .form-group { display: flex; flex-direction: column; gap: 6px; }
-  .form-group.full { grid-column: 1 / -1; }
-
-  label {
-    font-size: 12px;
-    font-weight: 600;
-    color: var(--text-muted);
-  }
-
-  input, select, textarea {
-    background: rgba(255,255,255,0.06);
-    border: 1px solid var(--border);
-    border-radius: 10px;
-    padding: 10px 14px;
-    color: var(--text);
-    font-family: 'Cairo', sans-serif;
-    font-size: 13px;
-    outline: none;
-    transition: border-color 0.2s;
-  }
-
-  input:focus, select:focus, textarea:focus { border-color: var(--accent); }
-  select option { background: var(--navy-mid); }
-  textarea { resize: vertical; min-height: 80px; }
-
-  .form-actions { display: flex; gap: 12px; justify-content: flex-end; margin-top: 20px; }
-
-  .btn-primary {
-    padding: 10px 28px;
-    background: linear-gradient(135deg, var(--accent), #0099dd);
-    color: #fff;
-    border: none;
-    border-radius: 10px;
-    font-family: 'Cairo', sans-serif;
-    font-size: 13px;
-    font-weight: 700;
-    cursor: pointer;
-    transition: opacity 0.2s;
-  }
-
-  .btn-primary:hover { opacity: 0.85; }
-
-  .btn-secondary {
-    padding: 10px 20px;
-    background: transparent;
-    color: var(--text-muted);
-    border: 1px solid var(--border);
-    border-radius: 10px;
-    font-family: 'Cairo', sans-serif;
-    font-size: 13px;
-    cursor: pointer;
-  }
-
-  /* Print modal */
-  .modal-overlay {
-    display: none;
-    position: fixed;
-    inset: 0;
-    background: rgba(0,0,10,0.8);
-    z-index: 200;
-    align-items: center;
-    justify-content: center;
-    backdrop-filter: blur(4px);
-  }
-
-  .modal-overlay.open { display: flex; }
-
-  .modal {
-    background: #0f1e36;
-    border: 1px solid var(--border);
-    border-radius: 20px;
-    padding: 32px;
-    width: 600px;
-    max-height: 85vh;
-    overflow-y: auto;
-    animation: slideUp 0.3s ease;
-  }
-
-  @keyframes slideUp {
-    from { opacity: 0; transform: translateY(20px); }
-    to { opacity: 1; transform: translateY(0); }
-  }
-
-  .modal-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    margin-bottom: 24px;
-    padding-bottom: 16px;
-    border-bottom: 1px solid var(--border);
-  }
-
-  .modal-title { font-size: 17px; font-weight: 700; }
-
-  .close-btn {
-    width: 32px; height: 32px;
-    background: rgba(255,255,255,0.05);
-    border: none;
-    border-radius: 8px;
-    color: var(--text-muted);
-    cursor: pointer;
-    font-size: 16px;
-    display: flex; align-items: center; justify-content: center;
-  }
-
-  /* Print order preview */
-  .print-preview {
-    background: #fff;
-    color: #111;
-    border-radius: 12px;
-    padding: 28px;
-    font-family: 'Cairo', sans-serif;
-  }
-
-  .print-preview h2 {
-    text-align: center;
-    font-size: 16px;
-    color: #1a4a8a;
-    margin-bottom: 4px;
-  }
-
-  .print-preview .facility {
-    text-align: center;
-    font-size: 12px;
-    color: #666;
-    margin-bottom: 20px;
-  }
-
-  .print-meta {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 10px;
-    margin-bottom: 18px;
-    background: #f0f7ff;
-    border-radius: 8px;
-    padding: 14px;
-  }
-
-  .print-meta-item { font-size: 12px; color: #333; }
-  .print-meta-item strong { color: #1a4a8a; }
-
-  .print-table {
-    width: 100%;
-    border-collapse: collapse;
-    margin-bottom: 16px;
-  }
-
-  .print-table th {
-    background: #1a4a8a;
-    color: #fff;
-    padding: 8px 12px;
-    font-size: 12px;
-    text-align: right;
-  }
-
-  .print-table td {
-    padding: 8px 12px;
-    font-size: 12px;
-    border-bottom: 1px solid #e5e7eb;
-    color: #333;
-  }
-
-  .print-table tr:nth-child(even) td { background: #f8fafc; }
-
-  .print-footer {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 30px;
-    margin-top: 24px;
-    padding-top: 16px;
-    border-top: 2px solid #1a4a8a;
-  }
-
-  .signature-box {
-    text-align: center;
-  }
-
-  .signature-box .line {
-    height: 1px;
-    background: #333;
-    margin: 30px 0 6px;
-  }
-
-  .signature-box p { font-size: 11px; color: #555; }
-
-  .print-actions {
-    display: flex;
-    gap: 10px;
-    margin-top: 20px;
-    justify-content: flex-end;
-  }
-
-  /* Alerts panel */
-  .alerts-list { display: flex; flex-direction: column; gap: 10px; }
-
-  .alert-item {
-    background: var(--card);
-    border: 1px solid var(--border);
-    border-radius: 12px;
-    padding: 14px 18px;
-    display: flex;
-    align-items: center;
-    gap: 14px;
-    transition: all 0.2s;
-  }
-
-  .alert-item.critical { border-right: 3px solid var(--danger); }
-  .alert-item.warning { border-right: 3px solid var(--warning); }
-
-  .alert-item:hover { background: rgba(255,255,255,0.06); }
-
-  .alert-icon { font-size: 22px; }
-  .alert-name { font-size: 14px; font-weight: 700; }
-  .alert-detail { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
-  .alert-pct { font-size: 22px; font-weight: 900; }
-  .alert-pct.critical { color: var(--danger); }
-  .alert-pct.warning { color: var(--warning); }
-
-  /* Add drug form */
-  .add-section {
-    background: var(--card);
-    border: 1px solid var(--border);
-    border-radius: 16px;
-    padding: 24px;
-    margin-bottom: 24px;
-  }
-
-  /* Notification toast */
-  .toast {
-    position: fixed;
-    bottom: 28px;
-    left: 50%;
-    transform: translateX(-50%) translateY(80px);
-    background: var(--accent);
-    color: #fff;
-    padding: 12px 24px;
-    border-radius: 12px;
-    font-size: 14px;
-    font-weight: 600;
-    z-index: 999;
-    transition: transform 0.4s cubic-bezier(.34,1.56,.64,1);
-  }
-
-  .toast.show { transform: translateX(-50%) translateY(0); }
-
-  /* ===== MOBILE RESPONSIVE ===== */
-  @media (max-width: 768px) {
-    .header { padding: 12px 16px; }
-    .header h1 { font-size: 14px; }
-    .header p { font-size: 10px; }
-    .header-date { font-size: 11px; padding: 6px 10px; display:none; }
-    .logo-icon { width: 36px; height: 36px; font-size: 18px; }
-
-    .main { padding: 14px 12px; }
-
-    .stats-bar { grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 16px; }
-    .stat-card { padding: 12px 14px; gap: 10px; }
-    .stat-icon { width: 36px; height: 36px; font-size: 16px; }
-    .stat-num { font-size: 22px; }
-    .stat-label { font-size: 10px; }
-
-    .tabs { width: 100%; justify-content: space-between; padding: 4px; gap: 4px; overflow-x: auto; }
-    .tab { padding: 7px 10px; font-size: 11px; white-space: nowrap; }
-
-    .inventory-container { border-radius: 12px; }
-    .table-toolbar { flex-wrap: wrap; gap: 8px; padding: 12px; }
-    .search-input { width: 100%; }
-    .filter-btn { font-size: 11px; padding: 7px 10px; }
-
-    table { display: block; overflow-x: auto; -webkit-overflow-scrolling: touch; }
-    th, td { padding: 9px 10px; font-size: 11px; white-space: nowrap; }
-
-    .form-panel { padding: 16px; }
-    .form-grid { grid-template-columns: 1fr; gap: 12px; }
-    .form-group.full { grid-column: 1; }
-
-    .add-section { padding: 16px; }
-
-    .modal { width: 95vw; padding: 20px; margin: 10px; }
-    .print-preview { padding: 16px; }
-    .print-meta { grid-template-columns: 1fr; }
-    .print-footer { grid-template-columns: 1fr; gap: 16px; }
-
-    .alerts-list { gap: 8px; }
-    .alert-item { padding: 12px; gap: 10px; flex-wrap: wrap; }
-    .alert-name { font-size: 13px; }
-    .alert-pct { font-size: 18px; }
-
-    .btn-primary, .btn-secondary { padding: 10px 16px; font-size: 13px; }
-    .form-actions { flex-direction: column; }
-    .form-actions button { width: 100%; justify-content: center; }
-
-    #basketTable { font-size: 11px; }
-    .action-btn { padding: 5px 10px; font-size: 11px; }
-
-    .section-header { flex-direction: column; align-items: flex-start; gap: 8px; }
-  }
-
-  @media (max-width: 400px) {
-    .stats-bar { grid-template-columns: 1fr 1fr; }
-    .tab { padding: 6px 8px; font-size: 10px; }
-  }
-
-  @media print {
-    body > *:not(#print-frame) { display: none; }
-    #print-frame { display: block !important; }
-  }
+* { margin:0; padding:0; box-sizing:border-box; }
+body { font-family:'Cairo',sans-serif; background:#0a1628; color:#e2e8f0; min-height:100vh; direction:rtl; }
+
+/* HEADER */
+.header { background:linear-gradient(135deg,#0f2347,#1a3a6b); padding:14px 20px; display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid rgba(255,255,255,0.08); position:sticky; top:0; z-index:100; }
+.header-title { display:flex; align-items:center; gap:12px; }
+.header-title h1 { font-size:17px; font-weight:900; color:#fff; }
+.header-title p { font-size:11px; color:#94a3b8; margin-top:2px; }
+.logo-icon { width:38px; height:38px; background:linear-gradient(135deg,#00c9a7,#0099dd); border-radius:10px; display:flex; align-items:center; justify-content:center; font-size:18px; flex-shrink:0; }
+.header-date { font-size:12px; color:#94a3b8; }
+
+/* STATS */
+.stats-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:12px; padding:16px; }
+.stat-card { background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.08); border-radius:14px; padding:14px; display:flex; align-items:center; justify-content:space-between; }
+.stat-num { font-size:26px; font-weight:900; }
+.stat-label { font-size:11px; color:#94a3b8; margin-top:4px; }
+.stat-icon { font-size:24px; opacity:0.8; }
+.stat-ok .stat-num { color:#10b981; }
+.stat-warn .stat-num { color:#f59e0b; }
+.stat-danger .stat-num { color:#ef4444; }
+
+/* TABS */
+.tabs { display:flex; gap:8px; padding:0 16px 12px; flex-wrap:wrap; }
+.tab-btn { padding:9px 16px; border-radius:10px; border:1px solid rgba(255,255,255,0.1); background:rgba(255,255,255,0.04); color:#94a3b8; font-family:Cairo,sans-serif; font-size:13px; cursor:pointer; transition:all 0.2s; white-space:nowrap; }
+.tab-btn.active { background:linear-gradient(135deg,#00c9a7,#0099dd); color:#fff; border-color:transparent; font-weight:700; }
+
+/* CONTENT */
+.content { padding:0 16px 80px; }
+.section { display:none; }
+.section.active { display:block; }
+
+/* CARD */
+.card { background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.08); border-radius:16px; padding:18px; margin-bottom:14px; }
+.card-title { font-size:15px; font-weight:700; margin-bottom:14px; display:flex; align-items:center; gap:8px; }
+
+/* FORM */
+.form-row { display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:12px; }
+.form-group { display:flex; flex-direction:column; gap:6px; }
+.form-group label { font-size:12px; color:#94a3b8; }
+.form-group input, .form-group select, .form-group textarea {
+  background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.1); border-radius:10px;
+  color:#fff; font-family:Cairo,sans-serif; font-size:13px; padding:10px 12px; width:100%;
+}
+.form-group input:focus, .form-group select:focus, .form-group textarea:focus {
+  outline:none; border-color:#00c9a7;
+}
+.form-group select option { background:#1a3a6b; }
+.form-group textarea { resize:vertical; min-height:70px; }
+
+/* BUTTONS */
+.btn-primary { background:linear-gradient(135deg,#00c9a7,#0099dd); color:#fff; border:none; border-radius:10px; padding:11px 20px; font-family:Cairo,sans-serif; font-size:13px; font-weight:700; cursor:pointer; transition:opacity 0.2s; }
+.btn-primary:hover { opacity:0.85; }
+.btn-secondary { background:rgba(255,255,255,0.06); color:#94a3b8; border:1px solid rgba(255,255,255,0.1); border-radius:10px; padding:11px 20px; font-family:Cairo,sans-serif; font-size:13px; cursor:pointer; }
+.btn-danger { background:rgba(239,68,68,0.15); color:#ef4444; border:1px solid rgba(239,68,68,0.3); border-radius:8px; padding:6px 12px; font-family:Cairo,sans-serif; font-size:12px; cursor:pointer; }
+.btn-whatsapp { background:linear-gradient(135deg,#25d366,#128c7e); color:#fff; border:none; border-radius:10px; padding:11px 20px; font-family:Cairo,sans-serif; font-size:13px; font-weight:700; cursor:pointer; }
+
+/* BASKET */
+.basket-section { margin-top:14px; }
+.basket-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; }
+.basket-item { background:rgba(0,201,167,0.06); border:1px solid rgba(0,201,167,0.15); border-radius:10px; padding:10px 14px; margin-bottom:8px; display:flex; align-items:center; gap:10px; }
+.basket-item-name { flex:1; font-size:13px; font-weight:600; }
+.basket-item-info { font-size:11px; color:#94a3b8; }
+.basket-qty { display:flex; align-items:center; gap:8px; }
+.qty-btn { width:26px; height:26px; border-radius:6px; border:1px solid rgba(255,255,255,0.15); background:rgba(255,255,255,0.06); color:#fff; font-size:14px; cursor:pointer; display:flex; align-items:center; justify-content:center; }
+.qty-num { font-size:14px; font-weight:700; min-width:24px; text-align:center; }
+
+/* TABLE */
+.table-wrap { overflow-x:auto; -webkit-overflow-scrolling:touch; }
+table { width:100%; border-collapse:collapse; font-size:13px; min-width:500px; }
+th { background:rgba(0,153,221,0.15); padding:10px 12px; text-align:right; font-weight:700; color:#94a3b8; font-size:12px; white-space:nowrap; }
+td { padding:10px 12px; border-bottom:1px solid rgba(255,255,255,0.05); }
+tr:hover td { background:rgba(255,255,255,0.03); }
+
+/* FILTERS */
+.filter-row { display:flex; gap:8px; margin-bottom:14px; flex-wrap:wrap; align-items:center; }
+.filter-btn { padding:7px 14px; border-radius:8px; border:1px solid rgba(255,255,255,0.1); background:rgba(255,255,255,0.04); color:#94a3b8; font-family:Cairo,sans-serif; font-size:12px; cursor:pointer; }
+.filter-btn.active { background:rgba(0,153,221,0.2); color:#0099dd; border-color:#0099dd; }
+.search-input { background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.1); border-radius:8px; color:#fff; font-family:Cairo,sans-serif; font-size:12px; padding:7px 12px; flex:1; min-width:120px; }
+.search-input:focus { outline:none; border-color:#00c9a7; }
+
+/* BADGE */
+.badge { display:inline-flex; align-items:center; gap:4px; padding:4px 10px; border-radius:20px; font-size:11px; font-weight:700; }
+.badge-danger { background:rgba(239,68,68,0.15); color:#ef4444; border:1px solid rgba(239,68,68,0.3); }
+.badge-warn { background:rgba(245,158,11,0.15); color:#f59e0b; border:1px solid rgba(245,158,11,0.3); }
+.badge-ok { background:rgba(16,185,129,0.15); color:#10b981; border:1px solid rgba(16,185,129,0.3); }
+
+/* PROGRESS BAR */
+.progress-wrap { display:flex; align-items:center; gap:8px; }
+.progress-bar { height:6px; border-radius:3px; background:rgba(255,255,255,0.08); flex:1; min-width:50px; overflow:hidden; }
+.progress-fill { height:100%; border-radius:3px; transition:width 0.3s; }
+.pct-text { font-size:12px; font-weight:700; min-width:32px; text-align:left; }
+
+/* MODAL */
+.modal-overlay { position:fixed; inset:0; background:rgba(0,0,0,0.75); z-index:1000; display:none; align-items:flex-start; justify-content:center; padding:20px; overflow-y:auto; backdrop-filter:blur(4px); }
+.modal-overlay.open { display:flex; }
+.modal { background:#0f2347; border:1px solid rgba(255,255,255,0.12); border-radius:20px; padding:24px; width:100%; max-width:680px; margin:auto; }
+.modal-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:18px; }
+.modal-title { font-size:16px; font-weight:700; }
+.close-btn { background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.1); color:#fff; border-radius:8px; width:32px; height:32px; cursor:pointer; font-size:14px; }
+.modal-actions { display:flex; gap:10px; justify-content:flex-end; margin-top:18px; flex-wrap:wrap; }
+
+/* PRINT AREA */
+.print-area { background:#fff; color:#000; padding:24px; border-radius:12px; font-family:Cairo,sans-serif; direction:rtl; }
+.print-header { text-align:center; border-bottom:2px solid #1a3a6b; padding-bottom:14px; margin-bottom:16px; }
+.print-header h2 { font-size:18px; color:#1a3a6b; }
+.print-header p { font-size:12px; color:#666; margin-top:4px; }
+.print-meta { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:16px; font-size:12px; }
+.print-meta-item { display:flex; gap:6px; }
+.print-meta-item strong { color:#1a3a6b; }
+.print-table { width:100%; border-collapse:collapse; font-size:12px; }
+.print-table th { background:#1a3a6b; color:#fff; padding:8px; text-align:right; }
+.print-table td { padding:7px 8px; border-bottom:1px solid #eee; }
+.print-sigs { display:grid; grid-template-columns:1fr 1fr; gap:20px; margin-top:24px; }
+.print-sig { text-align:center; border-top:1px solid #333; padding-top:8px; font-size:11px; color:#555; }
+
+/* CONFIRM DIALOG */
+.confirm-overlay { position:fixed; inset:0; background:rgba(0,0,0,0.7); z-index:2000; display:none; align-items:center; justify-content:center; backdrop-filter:blur(4px); }
+.confirm-overlay.open { display:flex; }
+.confirm-box { background:#0f2347; border:1px solid rgba(255,255,255,0.12); border-radius:20px; padding:28px; width:320px; max-width:90vw; text-align:center; }
+.confirm-icon { font-size:36px; margin-bottom:12px; }
+.confirm-title { font-size:16px; font-weight:700; margin-bottom:8px; }
+.confirm-sub { font-size:13px; color:#94a3b8; margin-bottom:22px; }
+.confirm-btns { display:flex; gap:10px; }
+
+/* TOAST */
+.toast { position:fixed; bottom:24px; right:50%; transform:translateX(50%); background:#1a3a6b; border:1px solid rgba(0,201,167,0.4); color:#fff; padding:12px 20px; border-radius:12px; font-size:13px; z-index:3000; display:none; max-width:90vw; text-align:center; box-shadow:0 8px 32px rgba(0,0,0,0.4); }
+.toast.show { display:block; animation:fadeInUp 0.3s ease; }
+@keyframes fadeInUp { from { opacity:0; transform:translateX(50%) translateY(20px); } to { opacity:1; transform:translateX(50%) translateY(0); } }
+
+/* NOTIF BANNER */
+#notifBanner { position:fixed; bottom:24px; left:50%; transform:translateX(-50%) translateY(120px); z-index:999; width:90%; max-width:500px; border-radius:14px; padding:14px 18px; display:flex; align-items:center; justify-content:space-between; gap:12px; transition:transform 0.4s cubic-bezier(0.34,1.56,0.64,1); }
+#notifBanner.show { transform:translateX(-50%) translateY(0); }
+
+/* ADD DRUG MODAL */
+.modal-two-col { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+
+/* MOBILE */
+@media(max-width:600px){
+  .stats-grid { grid-template-columns:repeat(2,1fr); }
+  .form-row { grid-template-columns:1fr; }
+  .modal-two-col { grid-template-columns:1fr; }
+  .header-title h1 { font-size:14px; }
+  .header-title p { font-size:10px; }
+  .print-meta { grid-template-columns:1fr; }
+  .print-sigs { grid-template-columns:1fr; }
+  .modal-actions { justify-content:stretch; }
+  .modal-actions button { flex:1; }
+  .tabs { gap:6px; }
+  .tab-btn { padding:8px 12px; font-size:12px; }
+}
 </style>
-<script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
-<script>
-  // ====== EmailJS Config ======
-  // بعد التسجيل في emailjs.com، ضعي مفاتيحك هنا:
-  const EMAILJS_PUBLIC_KEY  = 'qiRfB-y1RExZuNjQ-';
-  const EMAILJS_SERVICE_ID  = 'service_c2mbm0r';
-  const EMAILJS_TEMPLATE_ID = 'template_lr1yo1c';
-  const NOTIFY_EMAIL        = 'asmaaalwahby@gmail.com';
-
-  // تيليجرام — يُحمَّل من localStorage
-  let TELEGRAM_TOKEN   = localStorage.getItem('tg_token') || '';
-  let TELEGRAM_CHAT_ID = localStorage.getItem('tg_chat')  || '';
-
-  emailjs.init({ publicKey: EMAILJS_PUBLIC_KEY });
-</script>
 </head>
 <body>
 
-<!-- Header -->
+<!-- LOGIN SCREEN -->
+<div id="loginScreen" style="position:fixed;inset:0;background:#0a1628;z-index:9999;display:flex;align-items:center;justify-content:center;padding:20px;">
+  <div style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.1);border-radius:24px;padding:36px;width:100%;max-width:380px;text-align:center;">
+    <div style="font-size:48px;margin-bottom:16px;">💊</div>
+    <h2 style="font-size:20px;font-weight:900;color:#fff;margin-bottom:6px;">نظام إعادة تعبئة الأدوية</h2>
+    <p style="font-size:12px;color:#94a3b8;margin-bottom:28px;">عيادات بيورا - قسم الصيدلية مستودع العمليات</p>
+    <div style="display:flex;flex-direction:column;gap:12px;">
+      <div style="text-align:right;">
+        <label style="font-size:12px;color:#94a3b8;display:block;margin-bottom:6px;">اسم المستخدم</label>
+        <input id="loginUser" type="text" placeholder="أدخل اسمك" style="width:100%;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);border-radius:10px;color:#fff;font-family:Cairo,sans-serif;font-size:13px;padding:11px 14px;">
+      </div>
+      <div style="text-align:right;">
+        <label style="font-size:12px;color:#94a3b8;display:block;margin-bottom:6px;">كلمة المرور</label>
+        <input id="loginPass" type="password" placeholder="أدخل كلمة المرور" style="width:100%;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);border-radius:10px;color:#fff;font-family:Cairo,sans-serif;font-size:13px;padding:11px 14px;" onkeydown="if(event.key==='Enter')doLogin()">
+      </div>
+      <button onclick="doLogin()" style="background:linear-gradient(135deg,#00c9a7,#0099dd);color:#fff;border:none;border-radius:10px;padding:13px;font-family:Cairo,sans-serif;font-size:14px;font-weight:700;cursor:pointer;margin-top:4px;">دخول</button>
+      <div id="loginError" style="color:#ef4444;font-size:12px;display:none;">اسم المستخدم أو كلمة المرور غير صحيحة</div>
+    </div>
+  </div>
+</div>
+
+<!-- HEADER -->
 <div class="header">
   <div class="header-title">
-    <div class="logo-icon">💉</div>
+    <div class="logo-icon">💊</div>
     <div>
       <h1>نظام إعادة تعبئة الأدوية</h1>
-      <p>قسم التخدير — المستودع الصيدلاني</p>
+      <p>عيادات بيورا - قسم الصيدلية مستودع العمليات</p>
     </div>
   </div>
   <div style="display:flex;align-items:center;gap:10px;">
     <div class="header-date" id="headerDate"></div>
-    <button onclick="openSettings()" style="background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.1);color:#94a3b8;border-radius:10px;padding:8px 14px;cursor:pointer;font-family:Cairo,sans-serif;font-size:13px;">⚙️ إعدادات</button>
+    <div style="display:flex;align-items:center;gap:8px;">
+      <div id="userBadge" style="background:rgba(0,201,167,0.1);border:1px solid rgba(0,201,167,0.2);border-radius:8px;padding:5px 12px;font-size:12px;color:#00c9a7;"></div>
+      <button onclick="doLogout()" style="background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.25);color:#ef4444;border-radius:8px;padding:5px 12px;font-family:Cairo,sans-serif;font-size:12px;cursor:pointer;">خروج 🚪</button>
+    </div>
   </div>
 </div>
 
-<!-- Main -->
-<div class="main">
-
-  <!-- Stats -->
-  <div class="stats-bar">
-    <div class="stat-card">
-      <div class="stat-icon total">📦</div>
-      <div>
-        <div class="stat-num" id="statTotal">0</div>
-        <div class="stat-label">إجمالي الأدوية</div>
-      </div>
-    </div>
-    <div class="stat-card">
-      <div class="stat-icon alert">🚨</div>
-      <div>
-        <div class="stat-num" style="color:var(--danger)" id="statCritical">0</div>
-        <div class="stat-label">بحاجة طلب عاجل (≤40%)</div>
-      </div>
-    </div>
-    <div class="stat-card">
-      <div class="stat-icon warning">⚠️</div>
-      <div>
-        <div class="stat-num" style="color:var(--warning)" id="statWarning">0</div>
-        <div class="stat-label">تحت المراقبة (41–60%)</div>
-      </div>
-    </div>
-    <div class="stat-card">
-      <div class="stat-icon ok">✅</div>
-      <div>
-        <div class="stat-num" style="color:var(--ok)" id="statOk">0</div>
-        <div class="stat-label">مخزون كافٍ</div>
-      </div>
-    </div>
+<!-- STATS -->
+<div class="stats-grid">
+  <div class="stat-card stat-ok">
+    <div><div class="stat-num" id="statOk">0</div><div class="stat-label">مخزون كافٍ</div></div>
+    <div class="stat-icon">✅</div>
   </div>
-
-  <!-- Tabs -->
-  <div class="tabs">
-    <button class="tab active" onclick="switchTab('inventory')">📋 المخزون</button>
-    <button class="tab" onclick="switchTab('alerts')">🔔 التنبيهات</button>
-    <button class="tab" onclick="switchTab('request')">📝 طلب جديد</button>
-    <button class="tab" onclick="switchTab('add')">➕ إضافة دواء</button>
+  <div class="stat-card stat-warn">
+    <div><div class="stat-num" id="statWarn">0</div><div class="stat-label">تحت المراقبة (41-60%)</div></div>
+    <div class="stat-icon">⚠️</div>
   </div>
+  <div class="stat-card stat-danger">
+    <div><div class="stat-num" id="statDanger">0</div><div class="stat-label">بحاجة طلب عاجل (≤40%)</div></div>
+    <div class="stat-icon">🚨</div>
+  </div>
+  <div class="stat-card">
+    <div><div class="stat-num" id="statTotal">0</div><div class="stat-label">إجمالي الأدوية</div></div>
+    <div class="stat-icon">📦</div>
+  </div>
+</div>
 
-  <!-- Tab: Inventory -->
-  <div id="tab-inventory">
-    <div class="inventory-container">
-      <div class="table-toolbar">
-        <input class="search-input" type="text" placeholder="🔍  ابحث عن دواء..." id="searchInput" oninput="renderTable()">
-        <button class="filter-btn active" onclick="setFilter('all', this)">الكل</button>
-        <button class="filter-btn" onclick="setFilter('critical', this)">عاجل فقط</button>
-        <button class="filter-btn" onclick="setFilter('warning', this)">تحت المراقبة</button>
-      </div>
-      <table>
+<!-- TABS -->
+<div class="tabs">
+  <button class="tab-btn active" onclick="showTab('inventory')">📦 المخزون</button>
+  <button class="tab-btn" onclick="showTab('request')">📋 طلب جديد</button>
+  <button class="tab-btn" onclick="showTab('alerts')">🔔 التنبيهات</button>
+  <button class="tab-btn" onclick="showTab('orders')">📜 الطلبات</button>
+  <button class="tab-btn" onclick="showTab('add')">➕ إضافة دواء</button>
+</div>
+
+<div class="content">
+
+<!-- INVENTORY TAB -->
+<div class="section active" id="tab-inventory">
+  <div class="filter-row">
+    <button class="filter-btn active" onclick="filterDrugs('all',this)">الكل</button>
+    <button class="filter-btn" onclick="filterDrugs('danger',this)">عاجل فقط</button>
+    <button class="filter-btn" onclick="filterDrugs('warn',this)">تحت المراقبة</button>
+    <input type="text" class="search-input" placeholder="🔍 ابحث عن دواء..." oninput="searchDrugs(this.value)">
+  </div>
+  <div class="card" style="padding:0;overflow:hidden;">
+    <div class="table-wrap">
+      <table id="inventoryTable">
         <thead>
           <tr>
+            <th>#</th>
             <th>اسم الدواء</th>
             <th>التركيز</th>
             <th>الوحدة</th>
@@ -716,205 +258,173 @@
       </table>
     </div>
   </div>
-
-  <!-- Tab: Alerts -->
-  <div id="tab-alerts" style="display:none">
-    <div class="alerts-list" id="alertsList"></div>
-  </div>
-
-  <!-- Tab: Request form -->
-  <div id="tab-request" style="display:none">
-
-    <!-- Header info row -->
-    <div class="form-panel active" style="margin-bottom:18px">
-      <div class="section-title" style="margin-bottom:16px">📋 معلومات الطلب</div>
-      <div class="form-grid">
-        <div class="form-group">
-          <label>التاريخ</label>
-          <input type="date" id="reqDate">
-        </div>
-        <div class="form-group">
-          <label>رقم الطلب</label>
-          <input type="text" id="reqNum" readonly>
-        </div>
-        <div class="form-group">
-          <label>القسم الطالب</label>
-          <input type="text" value="قسم التخدير" id="reqDept">
-        </div>
-        <div class="form-group">
-          <label>المسؤول الطالب</label>
-          <input type="text" placeholder="الاسم + الرتبة" id="reqName">
-        </div>
-        <div class="form-group full">
-          <label>ملاحظات عامة على الطلب</label>
-          <textarea id="reqNotes" placeholder="أي ملاحظات خاصة بالطلب..." style="min-height:56px"></textarea>
-        </div>
-      </div>
-    </div>
-
-    <!-- Add drug to basket -->
-    <div class="form-panel active" style="margin-bottom:18px">
-      <div class="section-title" style="margin-bottom:16px">➕ إضافة دواء للسلة</div>
-      <div class="form-grid">
-        <div class="form-group">
-          <label>اختر الدواء</label>
-          <select id="reqDrug" onchange="autofillRequest()">
-            <option value="">-- اختر دواء --</option>
-          </select>
-        </div>
-        <div class="form-group">
-          <label>الكمية المطلوبة</label>
-          <input type="number" id="reqQty" placeholder="أدخل الكمية" min="1">
-        </div>
-        <div class="form-group">
-          <label>المخزون الحالي</label>
-          <input type="text" id="reqCurrentStock" readonly>
-        </div>
-        <div class="form-group">
-          <label>درجة الأولوية</label>
-          <select id="reqPriority">
-            <option value="عاجل">🔴 عاجل</option>
-            <option value="متوسط">🟡 متوسط</option>
-            <option value="عادي">🟢 عادي</option>
-          </select>
-        </div>
-      </div>
-      <div class="form-actions" style="margin-top:12px">
-        <button class="btn-primary" onclick="addToBasket()" style="background:linear-gradient(135deg,#1a4a8a,#0099dd)">+ أضف للسلة</button>
-      </div>
-    </div>
-
-    <!-- Basket -->
-    <div class="form-panel active">
-      <div class="section-header">
-        <div class="section-title">🛒 سلة الطلب <span id="basketCount" style="background:var(--accent);color:#fff;border-radius:20px;padding:2px 10px;font-size:12px;margin-right:8px">0</span></div>
-      </div>
-
-      <div id="basketEmpty" style="text-align:center;padding:32px;color:var(--text-muted);font-size:13px">
-        لم تُضَف أي أدوية بعد — اختر دواءً من الأعلى وأضفه للسلة
-      </div>
-
-      <table id="basketTable" style="display:none;width:100%;border-collapse:collapse;margin-bottom:16px">
-        <thead>
-          <tr>
-            <th style="padding:10px 14px;font-size:12px;color:var(--text-muted);text-align:right;border-bottom:1px solid var(--border);background:rgba(255,255,255,0.02)">#</th>
-            <th style="padding:10px 14px;font-size:12px;color:var(--text-muted);text-align:right;border-bottom:1px solid var(--border);background:rgba(255,255,255,0.02)">اسم الدواء</th>
-            <th style="padding:10px 14px;font-size:12px;color:var(--text-muted);text-align:right;border-bottom:1px solid var(--border);background:rgba(255,255,255,0.02)">التركيز</th>
-            <th style="padding:10px 14px;font-size:12px;color:var(--text-muted);text-align:right;border-bottom:1px solid var(--border);background:rgba(255,255,255,0.02)">الوحدة</th>
-            <th style="padding:10px 14px;font-size:12px;color:var(--text-muted);text-align:right;border-bottom:1px solid var(--border);background:rgba(255,255,255,0.02)">المخزون</th>
-            <th style="padding:10px 14px;font-size:12px;color:var(--text-muted);text-align:right;border-bottom:1px solid var(--border);background:rgba(255,255,255,0.02)">الكمية المطلوبة</th>
-            <th style="padding:10px 14px;font-size:12px;color:var(--text-muted);text-align:right;border-bottom:1px solid var(--border);background:rgba(255,255,255,0.02)">الأولوية</th>
-            <th style="padding:10px 14px;font-size:12px;color:var(--text-muted);text-align:right;border-bottom:1px solid var(--border);background:rgba(255,255,255,0.02)">حذف</th>
-          </tr>
-        </thead>
-        <tbody id="basketBody"></tbody>
-      </table>
-
-      <div class="form-actions">
-        <button class="btn-secondary" onclick="clearBasket()">🗑️ مسح السلة</button>
-        <button class="btn-primary" onclick="generateOrder()">🖨️ إنشاء الطلب وطباعة</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- Tab: Add drug -->
-  <div id="tab-add" style="display:none">
-    <div class="add-section">
-      <div class="section-title" style="margin-bottom:20px">➕ إضافة دواء للمخزون</div>
-      <div class="form-grid">
-        <div class="form-group">
-          <label>اسم الدواء (عربي / إنجليزي)</label>
-          <input type="text" id="newName" placeholder="مثال: بروبوفول Propofol">
-        </div>
-        <div class="form-group">
-          <label>التركيز</label>
-          <input type="text" id="newConc" placeholder="مثال: 10 mg/ml">
-        </div>
-        <div class="form-group">
-          <label>وحدة القياس</label>
-          <select id="newUnit">
-            <option>أمبول</option>
-            <option>فيال</option>
-            <option>كيس</option>
-            <option>زجاجة</option>
-            <option>علبة</option>
-            <option>حبة</option>
-          </select>
-        </div>
-        <div class="form-group">
-          <label>المخزون الحالي</label>
-          <input type="number" id="newCurrent" placeholder="0" min="0">
-        </div>
-        <div class="form-group">
-          <label>الحد الأقصى للمخزون (PAR)</label>
-          <input type="number" id="newMax" placeholder="0" min="1">
-        </div>
-        <div class="form-group">
-          <label>الفئة</label>
-          <select id="newCat">
-            <option>تخدير عام</option>
-            <option>تخدير موضعي</option>
-            <option>مرخيات عضلية</option>
-            <option>أفيونيات</option>
-            <option>أدوية الطوارئ</option>
-            <option>محاليل وريدية</option>
-            <option>أخرى</option>
-          </select>
-        </div>
-      </div>
-      <div class="form-actions">
-        <button class="btn-primary" onclick="addDrug()">✅ إضافة للمخزون</button>
-      </div>
-    </div>
-  </div>
-
 </div>
 
-<!-- Print Modal -->
+<!-- REQUEST TAB -->
+<div class="section" id="tab-request">
+  <div class="card">
+    <div class="card-title">📋 معلومات الطلب</div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>التاريخ</label>
+        <input type="date" id="reqDate">
+      </div>
+      <div class="form-group">
+        <label>رقم الطلب</label>
+        <input type="text" id="reqNum" readonly style="opacity:0.7;">
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>القسم الطالب</label>
+        <input type="text" id="reqDept" value="عيادات بيورا - مستودع العمليات">
+      </div>
+      <div class="form-group">
+        <label>المسؤول الطالب</label>
+        <input type="text" id="reqName" placeholder="اسم المسؤول">
+      </div>
+    </div>
+    <div class="form-group">
+      <label>ملاحظات عامة على الطلب</label>
+      <textarea id="reqNotes" placeholder="أي ملاحظات خاصة بالطلب..."></textarea>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">💊 إضافة دواء للسلة</div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>اختر الدواء</label>
+        <select id="drugSelect" onchange="updateDrugInfo()">
+          <option value="">-- اختر دواء --</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>الكمية المطلوبة</label>
+        <input type="number" id="reqQty" value="1" min="1">
+      </div>
+    </div>
+    <div id="drugInfoBox" style="display:none; background:rgba(0,201,167,0.06); border:1px solid rgba(0,201,167,0.2); border-radius:10px; padding:12px; margin-bottom:12px; font-size:12px; color:#94a3b8;"></div>
+    <button class="btn-primary" onclick="addToBasket()">➕ أضف للسلة</button>
+
+    <div class="basket-section" id="basketSection" style="display:none; margin-top:16px;">
+      <div class="basket-header">
+        <span style="font-size:13px; font-weight:700;">🛒 السلة (<span id="basketCount">0</span> صنف)</span>
+        <button class="btn-danger" onclick="clearBasket()">مسح الكل</button>
+      </div>
+      <div id="basketItems"></div>
+    </div>
+  </div>
+
+  <button class="btn-primary" style="width:100%; padding:14px; font-size:15px;" onclick="generateOrder()">📋 إنشاء الطلب</button>
+</div>
+
+<!-- ALERTS TAB -->
+<div class="section" id="tab-alerts">
+  <div class="card">
+    <div class="card-title">🚨 الأدوية بحاجة طلب عاجل (≤40%)</div>
+    <div id="alertsDanger"></div>
+  </div>
+  <div class="card">
+    <div class="card-title">⚠️ الأدوية تحت المراقبة (41-60%)</div>
+    <div id="alertsWarn"></div>
+  </div>
+</div>
+
+<!-- ADD DRUG TAB -->
+<div class="section" id="tab-add">
+  <div class="card">
+    <div class="card-title">➕ إضافة دواء جديد</div>
+    <div class="modal-two-col">
+      <div class="form-group">
+        <label>اسم الدواء (عربي + إنجليزي)</label>
+        <input type="text" id="addName" placeholder="مثال: بروبوفول Propofol">
+      </div>
+      <div class="form-group">
+        <label>التركيز</label>
+        <input type="text" id="addConc" placeholder="مثال: 10 mg/ml">
+      </div>
+      <div class="form-group">
+        <label>الوحدة</label>
+        <select id="addUnit">
+          <option>أمبول</option><option>فيال</option><option>علبة</option><option>زجاجة</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>الفئة</label>
+        <select id="addCat">
+          <option>تخدير عام</option><option>تخدير موضعي</option><option>مرخيات عضلية</option>
+          <option>مواد مخدرة</option><option>مقلوبات</option><option>أدوية طارئة</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>المخزون الحالي</label>
+        <input type="number" id="addCurrent" min="0" value="0">
+      </div>
+      <div class="form-group">
+        <label>الحد الأقصى</label>
+        <input type="number" id="addMax" min="1" value="30">
+      </div>
+    </div>
+    <button class="btn-primary" style="margin-top:4px;" onclick="addNewDrug()">حفظ الدواء</button>
+  </div>
+  <div class="card">
+    <div class="card-title">✏️ تعديل المخزون</div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>اسم الدواء</th><th>المخزون الحالي</th><th>تحديث</th></tr></thead>
+        <tbody id="editStockBody"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- ORDERS TAB -->
+<div class="section" id="tab-orders">
+  <div class="card">
+    <div class="card-title">📜 الطلبات المنشأة</div>
+    <div class="filter-row">
+      <button class="filter-btn active" onclick="filterOrders('all',this)">الكل</button>
+      <button class="filter-btn" onclick="filterOrders('pending',this)">⏳ انتظار</button>
+      <button class="filter-btn" onclick="filterOrders('done',this)">✅ تم الصرف</button>
+      <button class="filter-btn" onclick="filterOrders('rejected',this)">❌ مرفوض</button>
+    </div>
+    <div id="ordersList"><div style="color:#94a3b8;font-size:13px;padding:12px;">لا توجد طلبات بعد — أنشئي طلباً من تبويب "طلب جديد"</div></div>
+  </div>
+</div>
+
+</div><!-- end content -->
+
+<!-- PRINT MODAL -->
 <div class="modal-overlay" id="printModal">
-  <div class="modal">
+  <div class="modal" style="max-width:720px;">
     <div class="modal-header">
       <div class="modal-title">🖨️ معاينة الطلب قبل الطباعة</div>
-      <button class="close-btn" onclick="closeModal()">✕</button>
+      <button class="close-btn" onclick="closePrintModal()">✕</button>
     </div>
-    <div class="print-preview" id="printContent"></div>
-    <div class="print-actions">
-      <button class="btn-secondary" onclick="closeModal()">إغلاق</button>
+    <div class="print-area" id="printArea"></div>
+    <div class="modal-actions">
+      <button class="btn-secondary" onclick="closePrintModal()">إغلاق</button>
       <button class="btn-primary" onclick="printOrder()">🖨️ طباعة</button>
     </div>
   </div>
 </div>
 
-<!-- Toast -->
-<div class="toast" id="toast"></div>
-
-<!-- Settings Modal -->
-<div class="modal-overlay" id="settingsModal">
-  <div class="modal" style="max-width:440px">
-    <div class="modal-header">
-      <div class="modal-title">⚙️ إعدادات التنبيهات</div>
-      <button class="close-btn" onclick="closeSettings()">✕</button>
-    </div>
-    <div style="display:flex;flex-direction:column;gap:14px;">
-      <div class="form-group">
-        <label>توكن بوت تيليجرام</label>
-        <input type="text" id="settingToken" placeholder="مثال: 123456:ABC..." style="direction:ltr">
-      </div>
-      <div class="form-group">
-        <label>Chat ID الخاص بك</label>
-        <input type="text" id="settingChat" placeholder="مثال: 124103655" style="direction:ltr">
-      </div>
-      <div style="background:rgba(0,201,167,0.08);border:1px solid rgba(0,201,167,0.2);border-radius:10px;padding:12px;font-size:12px;color:#94a3b8;line-height:1.8">
-        للحصول على التوكن: تواصل مع @BotFather<br>
-        للحصول على Chat ID: تواصل مع @userinfobot
-      </div>
-      <div class="form-actions" style="margin-top:4px">
-        <button class="btn-secondary" onclick="closeSettings()">إلغاء</button>
-        <button class="btn-primary" onclick="saveSettings()">💾 حفظ</button>
-      </div>
+<!-- CONFIRM DIALOG -->
+<div class="confirm-overlay" id="confirmOverlay">
+  <div class="confirm-box">
+    <div class="confirm-icon">📋</div>
+    <div class="confirm-title" id="confirmTitle"></div>
+    <div class="confirm-sub" id="confirmSub"></div>
+    <div class="confirm-btns">
+      <button class="btn-secondary" style="flex:1;" onclick="closeConfirm()">إلغاء</button>
+      <button class="btn-primary" style="flex:1;" id="confirmYes">✅ نعم، أنشئ</button>
     </div>
   </div>
 </div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
 
 <script>
 // ======== DATA ========
@@ -922,556 +432,627 @@ let drugs = [
   { id: 1, name: 'بروبوفول Propofol', conc: '10 mg/ml', unit: 'أمبول', current: 8,  max: 50, cat: 'تخدير عام' },
   { id: 2, name: 'كيتامين Ketamine',  conc: '50 mg/ml', unit: 'فيال',   current: 15, max: 40, cat: 'تخدير عام' },
   { id: 3, name: 'أتراكيوريوم Atracurium', conc: '10 mg/ml', unit: 'أمبول', current: 6, max: 30, cat: 'مرخيات عضلية' },
-  { id: 4, name: 'فنتانيل Fentanyl',  conc: '50 mcg/ml', unit: 'أمبول', current: 4,  max: 20, cat: 'أفيونيات' },
-  { id: 5, name: 'ليدوكايين Lidocaine', conc: '2%',      unit: 'فيال',   current: 22, max: 40, cat: 'تخدير موضعي' },
-  { id: 6, name: 'أتروبين Atropine',   conc: '1 mg/ml', unit: 'أمبول', current: 18, max: 30, cat: 'أدوية الطوارئ' },
-  { id: 7, name: 'إبينفرين Epinephrine', conc: '1 mg/ml', unit: 'أمبول', current: 9, max: 25, cat: 'أدوية الطوارئ' },
-  { id: 8, name: 'سيفوفلوران Sevoflurane', conc: '100%', unit: 'زجاجة', current: 3,  max: 10, cat: 'تخدير عام' },
+  { id: 4, name: 'فنتانيل Fentanyl',  conc: '50 mcg/ml', unit: 'أمبول', current: 4,  max: 20, cat: 'مواد مخدرة' },
+  { id: 5, name: 'ليدوكايين Lidocaine', conc: '2%', unit: 'فيال', current: 22, max: 40, cat: 'تخدير موضعي' },
+  { id: 6, name: 'أتروبين Atropine',  conc: '1 mg/ml', unit: 'أمبول', current: 18, max: 30, cat: 'مقلوبات' },
+  { id: 7, name: 'إبينفرين Epinephrine', conc: '1 mg/ml', unit: 'أمبول', current: 5, max: 25, cat: 'أدوية طارئة' },
+  { id: 8, name: 'سيفوفلوران Sevoflurane', conc: '100%', unit: 'زجاجة', current: 2, max: 10, cat: 'تخدير عام' },
   { id: 9, name: 'روكورونيوم Rocuronium', conc: '10 mg/ml', unit: 'فيال', current: 28, max: 35, cat: 'مرخيات عضلية' },
-  { id: 10, name: 'نيوستيجمين Neostigmine', conc: '0.5 mg/ml', unit: 'أمبول', current: 12, max: 20, cat: 'أخرى' },
+  { id: 10, name: 'نيوستيجمين Neostigmine', conc: '0.5 mg/ml', unit: 'أمبول', current: 12, max: 20, cat: 'مقلوبات' }
 ];
 
-let currentFilter = 'all';
-let orderCounter = 1001;
 let basket = [];
+let orderCounter = 1000;
+let currentFilter = 'all';
+let currentSearch = '';
+let lastOrderData = null;
 
+// ======== HELPERS ========
 function getPct(d) { return Math.round((d.current / d.max) * 100); }
-function getStatus(pct) {
-  if (pct <= 40) return 'critical';
-  if (pct <= 60) return 'warning';
-  return 'ok';
-}
-function statusLabel(s) {
-  return s === 'critical' ? 'عاجل' : s === 'warning' ? 'تحت المراقبة' : 'كافٍ';
-}
 
-// ======== INIT ========
-window.onload = () => {
-  document.getElementById('headerDate').textContent = new Date().toLocaleDateString('ar-SA', {weekday:'long', year:'numeric', month:'long', day:'numeric'});
-  document.getElementById('reqDate').value = new Date().toISOString().split('T')[0];
-  document.getElementById('reqNum').value = 'REQ-' + orderCounter;
-  renderAll();
-  requestNotifPermission();
-};
-
-function requestNotifPermission() {
-  if ('Notification' in window && Notification.permission === 'default') {
-    Notification.requestPermission();
-  }
+function getPriority(d) {
+  const p = getPct(d);
+  if (p <= 40) return 'عاجل';
+  if (p <= 60) return 'متوسط';
+  return 'عادي';
 }
 
-function sendOrderNotification(reqNum, itemCount, priority, requester, dept) {
-  // 1. In-app banner
-  showInAppNotif(reqNum, itemCount, priority, requester, dept);
+function getBadge(d) {
+  const p = getPct(d);
+  if (p <= 40) return `<span class="badge badge-danger">🔴 عاجل</span>`;
+  if (p <= 60) return `<span class="badge badge-warn">🟡 متوسط</span>`;
+  return `<span class="badge badge-ok">🟢 كافٍ</span>`;
+}
 
-  // 2. Browser notification
-  if ('Notification' in window && Notification.permission === 'granted') {
-    const priorityAr = priority === 'عاجل' ? '🔴 عاجل' : priority === 'متوسط' ? '🟡 متوسط' : '🟢 عادي';
-    new Notification('📋 طلب إعادة تعبئة جديد', {
-      body: `${reqNum} | ${dept}\n${itemCount} صنف | الأولوية: ${priorityAr}\nمقدم الطلب: ${requester}`,
-      icon: 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><text y=".9em" font-size="90">💉</text></svg>',
-      tag: reqNum,
-      requireInteraction: priority === 'عاجل'
+function getBarColor(p) {
+  if (p <= 40) return '#ef4444';
+  if (p <= 60) return '#f59e0b';
+  return '#10b981';
+}
+
+function getHijri(date) {
+  try {
+    return new Date(date || Date.now()).toLocaleDateString('ar-SA-u-ca-islamic', {
+      day:'numeric', month:'long', year:'numeric'
     });
-  }
-
-  // 3. EmailJS — إرسال إيميل تلقائي
-  if (EMAILJS_PUBLIC_KEY === 'YOUR_PUBLIC_KEY') return; // لم يتم الإعداد بعد
-
-  // بناء جدول الأدوية للإيميل
-  const itemsText = basket.map((b, i) => {
-    const d = drugs.find(x => x.id === b.drugId);
-    return `${i+1}. ${d.name} — ${b.qty} ${d.unit} (مخزون حالي: ${d.current}/${d.max} = ${getPct(d)}%)`;
-  }).join('\n');
-
-  const templateParams = {
-    to_email      : NOTIFY_EMAIL,
-    req_num       : reqNum,
-    req_date      : new Date().toLocaleDateString('ar-SA'),
-    req_time      : new Date().toLocaleTimeString('ar-SA'),
-    department    : dept,
-    requester     : requester,
-    priority      : priority,
-    items_count   : itemCount,
-    items_list    : itemsText,
-    notes         : document.getElementById('reqNotes').value || 'لا يوجد',
-  };
-
-  emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, templateParams)
-    .then(() => {})
-    .catch(err => console.error('EmailJS error:', err));
-
-  // إرسال تيليجرام
-  sendTelegramNotification(reqNum, itemCount, priority, requester, dept);
+  } catch(e) { return ''; }
 }
 
-function sendTelegramNotification(reqNum, itemCount, priority, requester, dept) {
-  // اقرأ التوكن من localStorage في كل مرة
-  const TELEGRAM_TOKEN   = localStorage.getItem('tg_token') || '';
-  const TELEGRAM_CHAT_ID = localStorage.getItem('tg_chat')  || '';
-  if (!TELEGRAM_TOKEN || !TELEGRAM_CHAT_ID) { showToast('⚠️ أدخل إعدادات تيليجرام أولاً'); return; }
-  const priorityIcon = priority === 'عاجل' ? '🔴' : priority === 'متوسط' ? '🟡' : '🟢';
-  const itemsText = basket.map((b, i) => {
-    const d = drugs.find(x => x.id === b.drugId);
-    return `${i+1}. ${d.name} — ${b.qty} ${d.unit} (${getPct(d)}%)`;
-  }).join('%0A');
-
-  const msg =
-    `🔔 *طلب إعادة تعبئة جديد*%0A` +
-    `━━━━━━━━━━━━━━━━━━%0A` +
-    `📋 رقم الطلب: ${reqNum}%0A` +
-    `🏥 القسم: ${dept}%0A` +
-    `👤 مقدم الطلب: ${requester}%0A` +
-    `${priorityIcon} الأولوية: ${priority}%0A` +
-    `💊 عدد الأصناف: ${itemCount} صنف%0A` +
-    `🕐 الوقت: ${new Date().toLocaleTimeString('ar-SA')}%0A` +
-    `━━━━━━━━━━━━━━━━━━%0A` +
-    `الأدوية:%0A${itemsText}`;
-
-  const url = `https://api.telegram.org/bot${TELEGRAM_TOKEN}/sendMessage?chat_id=${TELEGRAM_CHAT_ID}&text=${msg}`;
-
-  fetch(url)
-    .then(r => r.json())
-    .then(data => {
-      if (data.ok) showToast('✅ تم إرسال تنبيه تيليجرام');
-      else showToast('⚠️ خطأ: ' + data.description);
-    })
-    .catch(() => showToast('⚠️ تعذّر الاتصال بتيليجرام'));
+function getMiladi(date) {
+  return new Date(date || Date.now()).toLocaleDateString('ar-SA', {
+    day:'numeric', month:'long', year:'numeric'
+  });
 }
 
-function showConfirmDialog(title, subtitle, onConfirm) {
-  const old = document.getElementById('confirmDialog');
-  if (old) old.remove();
-
-  const overlay = document.createElement('div');
-  overlay.id = 'confirmDialog';
-  overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:9998;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(4px);';
-
-  overlay.innerHTML = `
-    <div style="background:#0f1e36;border:1px solid rgba(255,255,255,0.12);border-radius:20px;padding:28px;width:340px;max-width:90vw;font-family:Cairo,sans-serif;direction:rtl;animation:slideUp 0.3s ease;">
-      <div style="font-size:36px;text-align:center;margin-bottom:12px;">📋</div>
-      <div style="font-size:17px;font-weight:700;color:#fff;text-align:center;margin-bottom:8px;">${title}</div>
-      <div style="font-size:13px;color:#94a3b8;text-align:center;margin-bottom:24px;">${subtitle}</div>
-      <div style="display:flex;gap:10px;">
-        <button id="confirmNo" style="flex:1;padding:12px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);border-radius:10px;color:#94a3b8;font-family:Cairo,sans-serif;font-size:14px;font-weight:600;cursor:pointer;">إلغاء</button>
-        <button id="confirmYes" style="flex:1;padding:12px;background:linear-gradient(135deg,#00c9a7,#0099dd);border:none;border-radius:10px;color:#fff;font-family:Cairo,sans-serif;font-size:14px;font-weight:700;cursor:pointer;">✅ نعم، أنشئ الطلب</button>
-      </div>
-    </div>
-  `;
-
-  document.body.appendChild(overlay);
-  document.getElementById('confirmYes').onclick = () => { overlay.remove(); onConfirm(); };
-  document.getElementById('confirmNo').onclick = () => overlay.remove();
-  overlay.onclick = (e) => { if (e.target === overlay) overlay.remove(); };
-}
-
-function showInAppNotif(reqNum, itemCount, priority, requester, dept) {
-  const priorityColor = priority === 'عاجل' ? '#ef4444' : priority === 'متوسط' ? '#f59e0b' : '#10b981';
-  const priorityIcon = priority === 'عاجل' ? '🔴' : priority === 'متوسط' ? '🟡' : '🟢';
-  
-  // Remove existing notif banner if any
-  const old = document.getElementById('notifBanner');
-  if (old) old.remove();
-
-  const banner = document.createElement('div');
-  banner.id = 'notifBanner';
-  banner.innerHTML = `
-    <div style="display:flex;align-items:center;gap:14px;flex:1">
-      <div style="font-size:28px">🔔</div>
-      <div>
-        <div style="font-weight:700;font-size:14px">طلب جديد أُنشئ بنجاح</div>
-        <div style="font-size:12px;opacity:0.85;margin-top:3px">
-          ${reqNum} &nbsp;|&nbsp; ${dept} &nbsp;|&nbsp; ${itemCount} صنف &nbsp;|&nbsp; ${priorityIcon} ${priority} &nbsp;|&nbsp; ${requester}
-        </div>
-      </div>
-    </div>
-    <button onclick="document.getElementById('notifBanner').remove()"
-      style="background:rgba(255,255,255,0.15);border:none;color:#fff;border-radius:8px;padding:6px 12px;cursor:pointer;font-size:13px;font-family:Cairo,sans-serif">✕</button>
-  `;
-  banner.style.cssText = `
-    position:fixed;bottom:28px;left:50%;transform:translateX(-50%) translateY(100px);
-    background:linear-gradient(135deg,${priorityColor}cc,${priorityColor}99);
-    backdrop-filter:blur(12px);
-    border:1px solid ${priorityColor};
-    color:#fff;padding:16px 24px;border-radius:16px;
-    display:flex;align-items:center;gap:16px;
-    min-width:460px;max-width:600px;
-    font-family:Cairo,sans-serif;direction:rtl;
-    z-index:9999;box-shadow:0 8px 32px rgba(0,0,0,0.4);
-    transition:transform 0.5s cubic-bezier(.34,1.56,.64,1);
-  `;
-  document.body.appendChild(banner);
-  setTimeout(() => banner.style.transform = 'translateX(-50%) translateY(0)', 50);
-  // Auto dismiss after 8s unless urgent
-  if (priority !== 'عاجل') {
-    setTimeout(() => { if (banner.parentNode) banner.style.transform = 'translateX(-50%) translateY(100px)'; setTimeout(() => banner.remove(), 500); }, 8000);
-  }
-}
-
+// ======== RENDER ========
 function renderAll() {
-  renderTable();
   renderStats();
+  renderInventory();
   renderAlerts();
+  renderEditStock();
   renderDrugSelect();
 }
 
-// ======== STATS ========
 function renderStats() {
-  const total = drugs.length;
-  const critical = drugs.filter(d => getPct(d) <= 40).length;
-  const warning = drugs.filter(d => { const p = getPct(d); return p > 40 && p <= 60; }).length;
-  const ok = total - critical - warning;
-  document.getElementById('statTotal').textContent = total;
-  document.getElementById('statCritical').textContent = critical;
-  document.getElementById('statWarning').textContent = warning;
+  const ok = drugs.filter(d => getPct(d) > 60).length;
+  const warn = drugs.filter(d => getPct(d) > 40 && getPct(d) <= 60).length;
+  const danger = drugs.filter(d => getPct(d) <= 40).length;
   document.getElementById('statOk').textContent = ok;
+  document.getElementById('statWarn').textContent = warn;
+  document.getElementById('statDanger').textContent = danger;
+  document.getElementById('statTotal').textContent = drugs.length;
 }
 
-// ======== TABLE ========
-function renderTable() {
-  const q = document.getElementById('searchInput').value.toLowerCase();
-  let filtered = drugs.filter(d => d.name.toLowerCase().includes(q));
-  if (currentFilter === 'critical') filtered = filtered.filter(d => getPct(d) <= 40);
-  if (currentFilter === 'warning') filtered = filtered.filter(d => { const p = getPct(d); return p > 40 && p <= 60; });
-
-  const body = document.getElementById('inventoryBody');
-  body.innerHTML = filtered.map(d => {
-    const pct = getPct(d);
-    const status = getStatus(pct);
-    const fillColor = status === 'critical' ? 'var(--danger)' : status === 'warning' ? 'var(--warning)' : 'var(--ok)';
-    const canRequest = status !== 'ok';
+function renderInventory() {
+  const tbody = document.getElementById('inventoryBody');
+  let list = drugs.filter(d => {
+    if (currentFilter === 'danger' && getPct(d) > 40) return false;
+    if (currentFilter === 'warn' && (getPct(d) <= 40 || getPct(d) > 60)) return false;
+    if (currentSearch && !d.name.includes(currentSearch)) return false;
+    return true;
+  });
+  tbody.innerHTML = list.map((d, i) => {
+    const p = getPct(d);
+    const col = getBarColor(p);
     return `<tr>
-      <td><strong>${d.name}</strong></td>
-      <td style="color:var(--text-muted)">${d.conc}</td>
+      <td>${i+1}</td>
+      <td><div style="font-weight:700;">${d.name}</div><div style="font-size:11px;color:#94a3b8;">${d.cat}</div></td>
+      <td>${d.conc}</td>
       <td>${d.unit}</td>
-      <td><strong>${d.current}</strong></td>
+      <td style="font-weight:700;">${d.current}</td>
       <td>${d.max}</td>
       <td>
         <div class="progress-wrap">
-          <div class="progress-bar"><div class="progress-fill" style="width:${pct}%;background:${fillColor}"></div></div>
-          <span class="pct-text" style="color:${fillColor}">${pct}%</span>
+          <div class="progress-bar"><div class="progress-fill" style="width:${p}%;background:${col};"></div></div>
+          <span class="pct-text" style="color:${col};">${p}%</span>
         </div>
       </td>
-      <td><span class="badge ${status}"><span class="dot"></span>${statusLabel(status)}</span></td>
-      <td>${canRequest
-        ? `<button class="action-btn btn-request" onclick="openRequestFor(${d.id})">طلب تعبئة</button>`
-        : `<span class="action-btn btn-disabled">لا حاجة</span>`
-      }</td>
+      <td>${getBadge(d)}</td>
+      <td><button class="btn-primary" style="padding:6px 12px;font-size:12px;" onclick="quickAdd(${d.id})">+ للسلة</button></td>
     </tr>`;
   }).join('');
 }
 
-function setFilter(f, btn) {
-  currentFilter = f;
-  document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
-  btn.classList.add('active');
-  renderTable();
+function renderAlerts() {
+  const danger = drugs.filter(d => getPct(d) <= 40);
+  const warn = drugs.filter(d => getPct(d) > 40 && getPct(d) <= 60);
+
+  document.getElementById('alertsDanger').innerHTML = danger.length ? danger.map(d => `
+    <div style="background:rgba(239,68,68,0.08);border:1px solid rgba(239,68,68,0.2);border-radius:10px;padding:12px;margin-bottom:8px;display:flex;justify-content:space-between;align-items:center;">
+      <div>
+        <div style="font-weight:700;font-size:13px;">${d.name}</div>
+        <div style="font-size:11px;color:#94a3b8;margin-top:3px;">${d.current} من ${d.max} ${d.unit} — ${getPct(d)}%</div>
+      </div>
+      <button class="btn-primary" style="padding:7px 14px;font-size:12px;" onclick="quickAdd(${d.id})">+ للسلة</button>
+    </div>`).join('') : '<div style="color:#94a3b8;font-size:13px;padding:8px;">✅ لا توجد أدوية عاجلة</div>';
+
+  document.getElementById('alertsWarn').innerHTML = warn.length ? warn.map(d => `
+    <div style="background:rgba(245,158,11,0.08);border:1px solid rgba(245,158,11,0.2);border-radius:10px;padding:12px;margin-bottom:8px;display:flex;justify-content:space-between;align-items:center;">
+      <div>
+        <div style="font-weight:700;font-size:13px;">${d.name}</div>
+        <div style="font-size:11px;color:#94a3b8;margin-top:3px;">${d.current} من ${d.max} ${d.unit} — ${getPct(d)}%</div>
+      </div>
+      <button class="btn-primary" style="padding:7px 14px;font-size:12px;" onclick="quickAdd(${d.id})">+ للسلة</button>
+    </div>`).join('') : '<div style="color:#94a3b8;font-size:13px;padding:8px;">✅ لا توجد أدوية تحت المراقبة</div>';
 }
 
-// ======== ALERTS ========
-function renderAlerts() {
-  const alerts = drugs.filter(d => getPct(d) <= 60).sort((a, b) => getPct(a) - getPct(b));
-  const list = document.getElementById('alertsList');
-  if (!alerts.length) {
-    list.innerHTML = `<div style="text-align:center;padding:40px;color:var(--text-muted)">✅ لا توجد تنبيهات حالياً — جميع الأدوية بمستويات كافية</div>`;
-    return;
-  }
-  list.innerHTML = alerts.map(d => {
-    const pct = getPct(d);
-    const status = getStatus(pct);
-    const needed = d.max - d.current;
-    return `<div class="alert-item ${status}">
-      <div class="alert-icon">${status === 'critical' ? '🚨' : '⚠️'}</div>
-      <div style="flex:1">
-        <div class="alert-name">${d.name}</div>
-        <div class="alert-detail">المخزون: ${d.current} ${d.unit} من أصل ${d.max} | يُحتاج: ${needed} ${d.unit} للوصول للحد الأقصى</div>
+function renderEditStock() {
+  document.getElementById('editStockBody').innerHTML = drugs.map(d => `
+    <tr>
+      <td style="font-size:13px;font-weight:600;">${d.name}</td>
+      <td><input type="number" value="${d.current}" min="0" style="width:70px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);border-radius:8px;color:#fff;font-family:Cairo,sans-serif;padding:6px;font-size:13px;" onchange="updateStock(${d.id},this.value)"></td>
+      <td style="font-size:12px;color:#94a3b8;">من ${d.max}</td>
+    </tr>`).join('');
+}
+
+function renderDrugSelect() {
+  const sel = document.getElementById('drugSelect');
+  sel.innerHTML = '<option value="">-- اختر دواء --</option>' +
+    drugs.map(d => `<option value="${d.id}">${d.name} (${getPct(d)}%)</option>`).join('');
+}
+
+// ======== BASKET ========
+function quickAdd(id) {
+  showTab('request');
+  document.getElementById('drugSelect').value = id;
+  updateDrugInfo();
+  addToBasket();
+}
+
+function updateDrugInfo() {
+  const id = parseInt(document.getElementById('drugSelect').value);
+  const box = document.getElementById('drugInfoBox');
+  if (!id) { box.style.display='none'; return; }
+  const d = drugs.find(x => x.id === id);
+  if (!d) { box.style.display='none'; return; }
+  box.style.display = 'block';
+  box.innerHTML = `المخزون الحالي: <strong>${d.current} ${d.unit}</strong> | الحد الأقصى: <strong>${d.max}</strong> | النسبة: <strong style="color:${getBarColor(getPct(d))}">${getPct(d)}%</strong> | الأولوية: ${getBadge(d)}`;
+}
+
+function addToBasket() {
+  const id = parseInt(document.getElementById('drugSelect').value);
+  const qty = parseInt(document.getElementById('reqQty').value) || 1;
+  if (!id) { showToast('⚠️ اختر دواءً أولاً'); return; }
+  const d = drugs.find(x => x.id === id);
+  const existing = basket.find(b => b.drugId === id);
+  if (existing) { existing.qty += qty; }
+  else { basket.push({ drugId: id, qty, priority: getPriority(d) }); }
+  renderBasket();
+  document.getElementById('drugSelect').value = '';
+  document.getElementById('drugInfoBox').style.display = 'none';
+  document.getElementById('reqQty').value = 1;
+  showToast('✅ تم إضافة ' + d.name + ' للسلة');
+}
+
+function renderBasket() {
+  const sec = document.getElementById('basketSection');
+  const items = document.getElementById('basketItems');
+  const count = document.getElementById('basketCount');
+  if (!basket.length) { sec.style.display='none'; return; }
+  sec.style.display = 'block';
+  count.textContent = basket.length;
+  items.innerHTML = basket.map((b, i) => {
+    const d = drugs.find(x => x.id === b.drugId);
+    return `<div class="basket-item">
+      <div style="flex:1;">
+        <div class="basket-item-name">${d.name}</div>
+        <div class="basket-item-info">${d.conc} | ${d.unit} | ${getBadge(d)}</div>
       </div>
-      <div class="alert-pct ${status}">${pct}%</div>
-      <button class="action-btn btn-request" onclick="openRequestFor(${d.id}); switchTab('request')">طلب تعبئة ←</button>
+      <div class="basket-qty">
+        <button class="qty-btn" onclick="changeQty(${i},-1)">−</button>
+        <span class="qty-num">${b.qty}</span>
+        <button class="qty-btn" onclick="changeQty(${i},1)">+</button>
+      </div>
+      <button class="btn-danger" onclick="removeFromBasket(${i})">✕</button>
     </div>`;
   }).join('');
 }
 
-// ======== DRUG SELECT ========
-function renderDrugSelect() {
-  const sel = document.getElementById('reqDrug');
-  const alertDrugs = drugs.filter(d => getPct(d) <= 60).sort((a,b) => getPct(a)-getPct(b));
-  const otherDrugs = drugs.filter(d => getPct(d) > 60);
-  sel.innerHTML = `<option value="">-- اختر دواء --</option>`;
-  if (alertDrugs.length) {
-    sel.innerHTML += `<optgroup label="⚠️ تحتاج إعادة تعبئة">` + alertDrugs.map(d => `<option value="${d.id}">${d.name} (${getPct(d)}%)</option>`).join('') + `</optgroup>`;
-  }
-  sel.innerHTML += `<optgroup label="📦 باقي الأدوية">` + otherDrugs.map(d => `<option value="${d.id}">${d.name} (${getPct(d)}%)</option>`).join('') + `</optgroup>`;
-}
-
-function autofillRequest() {
-  const id = parseInt(document.getElementById('reqDrug').value);
-  if (!id) return;
-  const d = drugs.find(x => x.id === id);
-  if (d) {
-    const needed = d.max - d.current;
-    document.getElementById('reqCurrentStock').value = `${d.current} ${d.unit}`;
-    document.getElementById('reqQty').value = needed;
-    const pct = getPct(d);
-    document.getElementById('reqPriority').value = pct <= 40 ? 'عاجل' : pct <= 60 ? 'متوسط' : 'عادي';
-  }
-}
-
-function openRequestFor(id) {
-  switchTab('request');
-  setTimeout(() => {
-    document.getElementById('reqDrug').value = id;
-    autofillRequest();
-  }, 50);
-}
-
-// ======== BASKET ========
-function addToBasket() {
-  const drugId = parseInt(document.getElementById('reqDrug').value);
-  const qty = parseInt(document.getElementById('reqQty').value);
-  const priority = document.getElementById('reqPriority').value;
-  if (!drugId || !qty || qty < 1) { showToast('⚠️ اختر دواء وحدد الكمية أولاً'); return; }
-  if (basket.find(b => b.drugId === drugId)) { showToast('⚠️ هذا الدواء موجود في السلة بالفعل'); return; }
-  basket.push({ drugId, qty, priority });
-  renderBasket();
-  document.getElementById('reqDrug').value = '';
-  document.getElementById('reqQty').value = '';
-  document.getElementById('reqCurrentStock').value = '';
-  showToast('✅ تمت الإضافة للسلة');
-}
-
-function removeFromBasket(drugId) {
-  basket = basket.filter(b => b.drugId !== drugId);
+function changeQty(idx, delta) {
+  basket[idx].qty = Math.max(1, basket[idx].qty + delta);
   renderBasket();
 }
 
-function clearBasket() { basket = []; renderBasket(); }
-
-function renderBasket() {
-  const count = basket.length;
-  document.getElementById('basketCount').textContent = count;
-  document.getElementById('basketEmpty').style.display = count ? 'none' : 'block';
-  document.getElementById('basketTable').style.display = count ? 'table' : 'none';
-  const body = document.getElementById('basketBody');
-  body.innerHTML = basket.map((b, i) => {
-    const d = drugs.find(x => x.id === b.drugId);
-    const pct = getPct(d);
-    const status = getStatus(pct);
-    const fillColor = status === 'critical' ? '#ef4444' : status === 'warning' ? '#f59e0b' : '#10b981';
-    const priorityIcon = b.priority === 'عاجل' ? '🔴' : b.priority === 'متوسط' ? '🟡' : '🟢';
-    return `<tr>
-      <td style="padding:11px 14px;font-size:13px;border-bottom:1px solid rgba(255,255,255,0.04)">${i+1}</td>
-      <td style="padding:11px 14px;font-size:13px;border-bottom:1px solid rgba(255,255,255,0.04)"><strong>${d.name}</strong></td>
-      <td style="padding:11px 14px;font-size:13px;color:var(--text-muted);border-bottom:1px solid rgba(255,255,255,0.04)">${d.conc}</td>
-      <td style="padding:11px 14px;font-size:13px;border-bottom:1px solid rgba(255,255,255,0.04)">${d.unit}</td>
-      <td style="padding:11px 14px;font-size:13px;border-bottom:1px solid rgba(255,255,255,0.04)">
-        <span style="color:${fillColor};font-weight:700">${d.current}</span>
-        <span style="color:var(--text-muted);font-size:11px"> / ${d.max} (${pct}%)</span>
-      </td>
-      <td style="padding:11px 14px;font-size:13px;border-bottom:1px solid rgba(255,255,255,0.04)">
-        <input type="number" value="${b.qty}" min="1"
-          style="width:70px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.08);border-radius:8px;padding:5px 8px;color:#e2e8f0;font-family:Cairo,sans-serif;font-size:13px;outline:none"
-          onchange="basket[${i}].qty=parseInt(this.value)||1">
-      </td>
-      <td style="padding:11px 14px;font-size:13px;border-bottom:1px solid rgba(255,255,255,0.04)">${priorityIcon} ${b.priority}</td>
-      <td style="padding:11px 14px;font-size:13px;border-bottom:1px solid rgba(255,255,255,0.04)">
-        <button onclick="removeFromBasket(${b.drugId})" style="background:rgba(239,68,68,0.15);border:none;color:#f87171;border-radius:7px;padding:5px 10px;cursor:pointer;font-size:12px;font-family:Cairo,sans-serif">حذف ✕</button>
-      </td>
-    </tr>`;
-  }).join('');
+function removeFromBasket(idx) {
+  basket.splice(idx, 1);
+  renderBasket();
 }
 
-// ======== TABS ========
-function switchTab(name) {
-  ['inventory','alerts','request','add'].forEach(t => {
-    document.getElementById('tab-' + t).style.display = t === name ? 'block' : 'none';
-  });
-  document.querySelectorAll('.tab').forEach((btn, i) => {
-    btn.classList.toggle('active', ['inventory','alerts','request','add'][i] === name);
-  });
+function clearBasket() {
+  basket = [];
+  renderBasket();
 }
 
-// ======== GENERATE ORDER ========
+// ======== ORDER ========
 function generateOrder() {
   const name = document.getElementById('reqName').value.trim();
+  const dept = document.getElementById('reqDept').value.trim();
   const date = document.getElementById('reqDate').value;
-  const dept = document.getElementById('reqDept').value;
-  const notes = document.getElementById('reqNotes').value;
-
+  const notes = document.getElementById('reqNotes').value.trim();
   if (!name) { showToast('⚠️ أدخل اسم المسؤول الطالب'); return; }
-  if (!basket.length) { showToast('⚠️ السلة فارغة — أضف دواء واحد على الأقل'); return; }
+  if (!basket.length) { showToast('⚠️ السلة فارغة — أضف دواءً واحداً على الأقل'); return; }
 
-  // رسالة تأكيد قبل الإنشاء
-  showConfirmDialog(
-    `هل تريد إنشاء الطلب؟`,
-    `${basket.length} صنف | مقدم الطلب: ${name}`,
-    () => _doGenerateOrder(name, date, dept, notes)
-  );
+  const priority = basket.some(b => b.priority === 'عاجل') ? 'عاجل' : basket.some(b => b.priority === 'متوسط') ? 'متوسط' : 'عادي';
+
+  document.getElementById('confirmTitle').textContent = 'هل تريد إنشاء الطلب؟';
+  document.getElementById('confirmSub').textContent = basket.length + ' صنف | مقدم الطلب: ' + name;
+  document.getElementById('confirmYes').onclick = () => {
+    closeConfirm();
+    doGenerateOrder(name, dept, date, notes, priority);
+  };
+  document.getElementById('confirmOverlay').classList.add('open');
 }
 
-function _doGenerateOrder(name, date, dept, notes) {
-
+function doGenerateOrder(name, dept, date, notes, priority) {
   orderCounter++;
   const reqNum = 'REQ-' + orderCounter;
   document.getElementById('reqNum').value = reqNum;
-  const highestPriority = basket.some(b => b.priority === 'عاجل') ? 'عاجل' : basket.some(b => b.priority === 'متوسط') ? 'متوسط' : 'عادي';
 
   const rows = basket.map((b, i) => {
     const d = drugs.find(x => x.id === b.drugId);
-    const pct = getPct(d);
     return `<tr>
       <td>${i+1}</td>
       <td>${d.name}</td>
       <td>${d.conc}</td>
       <td>${d.unit}</td>
       <td>${d.current}</td>
-      <td>${pct}%</td>
-      <td><strong>${b.qty}</strong></td>
+      <td>${getPct(d)}%</td>
+      <td>${b.qty}</td>
       <td>${b.priority}</td>
     </tr>`;
   }).join('');
 
-  const html = `
-    <h2>طلب إعادة تعبئة أدوية</h2>
-    <div class="facility">المنشأة الصحية — إدارة الصيدلة والمستودعات</div>
+  const hijri = getHijri(date);
+  const miladi = getMiladi(date);
+
+  document.getElementById('printArea').innerHTML = `
+    <div class="print-header">
+      <h2>طلب إعادة تعبئة أدوية</h2>
+      <p>عيادات بيورا - قسم الصيدلية مستودع العمليات</p>
+    </div>
     <div class="print-meta">
       <div class="print-meta-item"><strong>رقم الطلب:</strong> ${reqNum}</div>
-      <div class="print-meta-item"><strong>التاريخ:</strong> ${new Date(date).toLocaleDateString('ar-SA')}</div>
-      <div class="print-meta-item"><strong>القسم الطالب:</strong> ${dept}</div>
+      <div class="print-meta-item"><strong>التاريخ (م):</strong> ${miladi}</div>
+      <div class="print-meta-item"><strong>التاريخ (هـ):</strong> ${hijri}</div>
       <div class="print-meta-item"><strong>مقدم الطلب:</strong> ${name}</div>
-      <div class="print-meta-item"><strong>الأولوية العامة:</strong> ${highestPriority}</div>
+      <div class="print-meta-item"><strong>القسم الطالب:</strong> ${dept}</div>
       <div class="print-meta-item"><strong>عدد الأصناف:</strong> ${basket.length} صنف</div>
+      <div class="print-meta-item"><strong>الأولوية العامة:</strong> ${priority}</div>
+      ${notes ? `<div class="print-meta-item" style="grid-column:1/-1;"><strong>ملاحظات:</strong> ${notes}</div>` : ''}
     </div>
     <table class="print-table">
-      <thead>
-        <tr>
-          <th>#</th><th>اسم الدواء</th><th>التركيز</th><th>الوحدة</th>
-          <th>المخزون الحالي</th><th>نسبة المخزون</th><th>الكمية المطلوبة</th><th>الأولوية</th>
-        </tr>
-      </thead>
+      <thead><tr><th>#</th><th>اسم الدواء</th><th>التركيز</th><th>الوحدة</th><th>المخزون الحالي</th><th>نسبة المخزون</th><th>الكمية المطلوبة</th><th>الأولوية</th></tr></thead>
       <tbody>${rows}</tbody>
     </table>
-    ${notes ? `<div style="background:#f0f7ff;padding:12px;border-radius:8px;font-size:12px;color:#333;margin-bottom:16px"><strong>ملاحظات:</strong> ${notes}</div>` : ''}
-    <div class="print-footer">
-      <div class="signature-box"><div class="line"></div><p><strong>مقدم الطلب</strong></p><p>${name}</p></div>
-      <div class="signature-box"><div class="line"></div><p><strong>مدير الصيدلية / أمين المستودع</strong></p><p>التوقيع والختم</p></div>
-    </div>
-  `;
+    <div class="print-sigs">
+      <div class="print-sig"><div>${name}</div><div>مقدم الطلب — التوقيع والختم</div></div>
+      <div class="print-sig"><div>&nbsp;</div><div>مدير الصيدلية / أمين المستودع — التوقيع والختم</div></div>
+    </div>`;
 
-  document.getElementById('printContent').innerHTML = html;
+  // حفظ الطلب في قائمة الطلبات
+  const orderItems = basket.map(b => {
+    const d = drugs.find(x => x.id === b.drugId);
+    return { drugName: d.name, qty: b.qty, unit: d.unit, pct: getPct(d) };
+  });
+  saveOrder(reqNum, name, dept, date, hijri, miladi, priority, orderItems);
+  renderOrders();
+
+  lastOrderData = { name, dept, date, notes, priority, reqNum, hijri, miladi };
   document.getElementById('printModal').classList.add('open');
-  // Send browser notification
-  sendOrderNotification(reqNum, basket.length, highestPriority, name, dept);
+
+  showNotifBanner(reqNum, basket.length, priority, name, dept);
+  basket = [];
+  renderBasket();
+  renderAll();
 }
 
-function printOrder() {
-  const content = document.getElementById('printContent').innerHTML;
-  // Use hidden iframe to avoid window.open popup blockers
-  let iframe = document.getElementById('printFrame');
-  if (iframe) iframe.remove();
-  iframe = document.createElement('iframe');
-  iframe.id = 'printFrame';
-  iframe.style.cssText = 'position:fixed;top:-9999px;left:-9999px;width:800px;height:600px;border:none;';
-  document.body.appendChild(iframe);
-  const doc = iframe.contentDocument || iframe.contentWindow.document;
-  doc.open();
-  doc.write(`<!DOCTYPE html><html dir="rtl"><head>
-    <meta charset="UTF-8">
-    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&display=swap" rel="stylesheet">
-    <style>
-      body { font-family: 'Cairo', sans-serif; padding: 30px; color: #111; direction: rtl; }
-      h2 { text-align: center; color: #1a4a8a; margin-bottom:4px; }
-      .facility { text-align: center; color: #666; font-size: 12px; margin-bottom: 20px; }
-      .print-meta { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; background: #f0f7ff; padding: 14px; border-radius: 8px; margin-bottom: 18px; }
-      .print-meta-item { font-size: 12px; color:#333; }
-      .print-meta-item strong { color: #1a4a8a; }
-      table { width: 100%; border-collapse: collapse; margin-bottom:16px; }
-      th { background: #1a4a8a; color: #fff; padding: 8px 12px; font-size: 11px; text-align: right; }
-      td { padding: 8px 12px; font-size: 12px; border-bottom: 1px solid #e5e7eb; color:#333; }
-      tr:nth-child(even) td { background: #f8fafc; }
-      .print-footer { display: grid; grid-template-columns: 1fr 1fr; gap: 30px; margin-top: 24px; padding-top: 16px; border-top: 2px solid #1a4a8a; }
-      .signature-box { text-align: center; }
-      .signature-box .line { height: 1px; background: #333; margin: 30px 0 6px; }
-      .signature-box p { font-size: 11px; color: #555; margin:2px 0; }
-      @media print { @page { margin: 15mm; size: A4; } }
-    </style></head><body>${content}</body></html>`);
-  doc.close();
-  iframe.onload = () => {
-    try {
-      iframe.contentWindow.focus();
-      iframe.contentWindow.print();
-    } catch(e) {
-      showToast('⚠️ تعذّرت الطباعة التلقائية — جرّبي Ctrl+P');
-    }
-  };
+function closeConfirm() {
+  document.getElementById('confirmOverlay').classList.remove('open');
 }
 
-function closeModal() {
+function closePrintModal() {
   document.getElementById('printModal').classList.remove('open');
 }
 
-// ======== ADD DRUG ========
-function addDrug() {
-  const name = document.getElementById('newName').value.trim();
-  const conc = document.getElementById('newConc').value.trim();
-  const unit = document.getElementById('newUnit').value;
-  const current = parseInt(document.getElementById('newCurrent').value);
-  const max = parseInt(document.getElementById('newMax').value);
-  const cat = document.getElementById('newCat').value;
+function printOrder() {
+  const content = document.getElementById('printArea').innerHTML;
+  const printWin = window.open('', '', 'width=800,height=600');
+  if (!printWin) { showToast('⚠️ يرجى السماح بالنوافذ المنبثقة في المتصفح'); return; }
+  printWin.document.write('<!DOCTYPE html><html dir="rtl"><head><meta charset="UTF-8">');
+  printWin.document.write('<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap">');
+  printWin.document.write('<style>*{margin:0;padding:0;box-sizing:border-box;}body{font-family:Cairo,sans-serif;direction:rtl;padding:28px;color:#000;background:#fff;}.print-header{text-align:center;border-bottom:2px solid #1a3a6b;padding-bottom:14px;margin-bottom:18px;}.print-header h2{font-size:19px;color:#1a3a6b;margin-bottom:4px;}.print-header p{font-size:12px;color:#555;}.print-meta{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:18px;font-size:12px;}.print-meta-item{display:flex;gap:5px;}.print-meta-item strong{color:#1a3a6b;}.print-table{width:100%;border-collapse:collapse;margin-bottom:20px;}.print-table th{background:#1a3a6b;color:#fff;padding:9px 8px;text-align:right;font-size:12px;}.print-table td{padding:8px;border-bottom:1px solid #ddd;font-size:12px;}.print-sigs{display:grid;grid-template-columns:1fr 1fr;gap:30px;margin-top:30px;}.print-sig{text-align:center;border-top:1px solid #333;padding-top:10px;font-size:11px;color:#555;}</style>');
+  printWin.document.write('</head><body>');
+  printWin.document.write(content);
+  printWin.document.write('</body></html>');
+  printWin.document.close();
+  printWin.focus();
+  setTimeout(function(){ printWin.print(); printWin.close(); }, 800);
+}
 
-  if (!name || !conc || isNaN(current) || isNaN(max) || max <= 0) {
-    showToast('⚠️ يرجى تعبئة جميع الحقول');
-    return;
-  }
+// ======== WHATSAPP ========
+function sendWhatsApp() {
+  if (!lastOrderData) return;
+  const { name, dept, date, notes, priority, reqNum, hijri, miladi } = lastOrderData;
+  const priorityIcon = priority === 'عاجل' ? '🔴' : priority === 'متوسط' ? '🟡' : '🟢';
 
-  drugs.push({ id: Date.now(), name, conc, unit, current, max, cat });
+  const items = basket.length === 0
+    ? document.querySelectorAll('.print-table tbody tr')
+    : basket.map((b, i) => { const d = drugs.find(x => x.id === b.drugId); return { name: d.name, qty: b.qty, unit: d.unit, pct: getPct(d) }; });
+
+  // Get items from print area table
+  const rows = document.querySelectorAll('#printArea .print-table tbody tr');
+  const itemLines = Array.from(rows).map((r, i) => {
+    const cells = r.querySelectorAll('td');
+    return (i+1) + '. ' + cells[1].textContent + ' - كمية: ' + cells[6].textContent + ' ' + cells[3].textContent;
+  }).join('\n');
+
+  const msg =
+    '🔔 طلب إعادة تعبئة جديد\n' +
+    '━━━━━━━━━━━━━━━━━━\n' +
+    '📋 رقم الطلب: ' + reqNum + '\n' +
+    '🏥 القسم: ' + dept + '\n' +
+    '👤 مقدم الطلب: ' + name + '\n' +
+    priorityIcon + ' الأولوية: ' + priority + '\n' +
+    '📅 التاريخ: ' + miladi + '\n' +
+    '📅 الهجري: ' + hijri + '\n' +
+    '━━━━━━━━━━━━━━━━━━\n' +
+    'الأدوية المطلوبة:\n' + itemLines +
+    (notes ? '\n\nملاحظات: ' + notes : '');
+
+  window.open('https://wa.me/?text=' + encodeURIComponent(msg), '_blank');
+}
+
+// ======== NOTIFICATIONS ========
+function showNotifBanner(reqNum, count, priority, name, dept) {
+  const color = priority === 'عاجل' ? '#ef4444' : priority === 'متوسط' ? '#f59e0b' : '#10b981';
+  const icon = priority === 'عاجل' ? '🔴' : priority === 'متوسط' ? '🟡' : '🟢';
+  let banner = document.getElementById('notifBanner');
+  if (!banner) { banner = document.createElement('div'); banner.id = 'notifBanner'; document.body.appendChild(banner); }
+  banner.style.cssText = `position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(120px);z-index:999;width:90%;max-width:500px;border-radius:14px;padding:14px 18px;display:flex;align-items:center;justify-content:space-between;gap:12px;transition:transform 0.4s cubic-bezier(0.34,1.56,0.64,1);background:linear-gradient(135deg,${color}cc,${color}99);backdrop-filter:blur(12px);border:1px solid ${color};`;
+  banner.innerHTML = `
+    <div style="display:flex;align-items:center;gap:12px;flex:1;">
+      <div style="font-size:26px;">🔔</div>
+      <div>
+        <div style="font-weight:700;font-size:13px;color:#fff;">طلب جديد أُنشئ بنجاح</div>
+        <div style="font-size:11px;color:rgba(255,255,255,0.85);margin-top:3px;">${reqNum} | ${dept} | ${count} صنف | ${icon} ${priority} | ${name}</div>
+      </div>
+    </div>
+    <button onclick="this.parentElement.style.transform='translateX(-50%) translateY(120px)'" style="background:rgba(255,255,255,0.2);border:none;color:#fff;border-radius:8px;padding:6px 12px;cursor:pointer;font-size:13px;font-family:Cairo,sans-serif;">✕</button>`;
+  requestAnimationFrame(() => { banner.style.transform = 'translateX(-50%) translateY(0)'; });
+  setTimeout(() => { if(banner) banner.style.transform = 'translateX(-50%) translateY(120px)'; }, 6000);
+}
+
+// ======== FILTERS ========
+function filterDrugs(type, btn) {
+  currentFilter = type;
+  document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+  if (btn) btn.classList.add('active');
+  renderInventory();
+}
+
+function searchDrugs(val) {
+  currentSearch = val;
+  renderInventory();
+}
+
+// ======== ADD/EDIT ========
+function addNewDrug() {
+  const name = document.getElementById('addName').value.trim();
+  const conc = document.getElementById('addConc').value.trim();
+  const unit = document.getElementById('addUnit').value;
+  const cat  = document.getElementById('addCat').value;
+  const cur  = parseInt(document.getElementById('addCurrent').value) || 0;
+  const max  = parseInt(document.getElementById('addMax').value) || 30;
+  if (!name) { showToast('⚠️ أدخل اسم الدواء'); return; }
+  const newId = Math.max(...drugs.map(d => d.id)) + 1;
+  drugs.push({ id: newId, name, conc, unit, current: cur, max, cat });
+  ['addName','addConc'].forEach(id => document.getElementById(id).value = '');
+  document.getElementById('addCurrent').value = 0;
+  document.getElementById('addMax').value = 30;
   renderAll();
-  document.getElementById('newName').value = '';
-  document.getElementById('newConc').value = '';
-  document.getElementById('newCurrent').value = '';
-  document.getElementById('newMax').value = '';
-  showToast('✅ تمت إضافة الدواء بنجاح');
-  switchTab('inventory');
+  showToast('✅ تم إضافة ' + name);
 }
 
-// ======== HELPERS ========
-function resetForm() {
-  document.getElementById('reqDrug').value = '';
-  document.getElementById('reqQty').value = '';
-  document.getElementById('reqName').value = '';
-  document.getElementById('reqCurrentStock').value = '';
-  document.getElementById('reqNotes').value = '';
-}
-// (kept for compatibility)
-
-function openSettings() {
-  document.getElementById('settingToken').value = localStorage.getItem('tg_token') || '';
-  document.getElementById('settingChat').value  = localStorage.getItem('tg_chat')  || '';
-  document.getElementById('settingsModal').classList.add('open');
+function updateStock(id, val) {
+  const d = drugs.find(x => x.id === id);
+  if (d) { d.current = Math.max(0, parseInt(val) || 0); renderStats(); renderInventory(); renderAlerts(); }
 }
 
-function closeSettings() {
-  document.getElementById('settingsModal').classList.remove('open');
+// ======== TABS ========
+function showTab(name) {
+  document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('tab-' + name).classList.add('active');
+  const tabMap = { inventory:0, request:1, alerts:2, orders:3, add:4 };
+  document.querySelectorAll('.tab-btn')[tabMap[name]].classList.add('active');
 }
 
-function saveSettings() {
-  const token = document.getElementById('settingToken').value.trim();
-  const chat  = document.getElementById('settingChat').value.trim();
-  if (!token || !chat) { showToast('⚠️ أدخل التوكن والـ Chat ID'); return; }
-  localStorage.setItem('tg_token', token);
-  localStorage.setItem('tg_chat',  chat);
-  TELEGRAM_TOKEN   = token;
-  TELEGRAM_CHAT_ID = chat;
-  closeSettings();
-  showToast('✅ تم حفظ إعدادات تيليجرام');
-}
-
+// ======== TOAST ========
 function showToast(msg) {
   const t = document.getElementById('toast');
   t.textContent = msg;
   t.classList.add('show');
   setTimeout(() => t.classList.remove('show'), 3000);
 }
+
+// ======== INIT ========
+// ======== ORDERS STORE ========
+let orders = [];
+let ordersFilter = 'all';
+
+function saveOrder(reqNum, name, dept, date, hijri, miladi, priority, items) {
+  orders.unshift({
+    id: reqNum,
+    name, dept, date, hijri, miladi, priority,
+    items,
+    status: 'pending',
+    createdAt: new Date().toLocaleString('ar-SA')
+  });
+  persistOrders();
+  renderOrders();
+}
+
+function persistOrders() {
+  try { localStorage.setItem('sys_orders', JSON.stringify(orders)); } catch(e) {}
+}
+
+function loadOrders() {
+  try {
+    const saved = localStorage.getItem('sys_orders');
+    if (saved) orders = JSON.parse(saved);
+  } catch(e) { orders = []; }
+}
+
+function markOrderDone(id) {
+  const o = orders.find(x => x.id === id);
+  if (o) { o.status = 'done'; persistOrders(); renderOrders(); showToast('✅ تم الصرف ' + id); }
+}
+
+function markOrderPending(id) {
+  const o = orders.find(x => x.id === id);
+  if (o) { o.status = 'pending'; persistOrders(); renderOrders(); showToast('↩️ تم إعادة الطلب للانتظار'); }
+}
+
+function filterOrders(type, btn) {
+  ordersFilter = type;
+  document.querySelectorAll('#tab-orders .filter-btn').forEach(b => b.classList.remove('active'));
+  if (btn) btn.classList.add('active');
+  renderOrders();
+}
+
+function renderOrders() {
+  const list = document.getElementById('ordersList');
+  const isAdmin = currentUser && currentUser.role === 'admin';
+
+  let filtered = orders.filter(o => {
+    // موظف يشوف طلباته فقط
+    if (!isAdmin && o.name !== currentUser.name) return false;
+    if (ordersFilter === 'pending') return o.status === 'pending';
+    if (ordersFilter === 'done') return o.status === 'done';
+    if (ordersFilter === 'rejected') return o.status === 'rejected';
+    return true;
+  });
+
+  if (!filtered.length) {
+    list.innerHTML = '<div style="color:#94a3b8;font-size:13px;padding:12px;">لا توجد طلبات</div>';
+    return;
+  }
+
+  list.innerHTML = filtered.map(o => {
+    const priorityIcon = o.priority === 'عاجل' ? '🔴' : o.priority === 'متوسط' ? '🟡' : '🟢';
+
+    let statusBadge, borderColor, bgColor;
+    if (o.status === 'done') {
+      statusBadge = '<span class="badge badge-ok">✅ تم الصرف والتعبئة</span>';
+      borderColor = 'rgba(16,185,129,0.3)'; bgColor = 'rgba(16,185,129,0.05)';
+    } else if (o.status === 'rejected') {
+      statusBadge = '<span class="badge badge-danger">❌ مرفوض</span>';
+      borderColor = 'rgba(239,68,68,0.3)'; bgColor = 'rgba(239,68,68,0.05)';
+    } else {
+      statusBadge = '<span class="badge badge-warn">⏳ بانتظار التعبئة</span>';
+      borderColor = 'rgba(245,158,11,0.3)'; bgColor = 'rgba(245,158,11,0.05)';
+    }
+
+    const itemsHtml = o.items.map((it, i) => {
+      const dispensed = it.dispensed !== undefined ? it.dispensed : it.qty;
+      const qtyDisplay = isAdmin && o.status === 'pending'
+        ? `<span style="color:#94a3b8;font-size:11px;">طلب: ${it.qty}</span>
+           <span style="color:#94a3b8;margin:0 4px;">|</span>
+           <span style="font-size:11px;color:#00c9a7;">صرف:</span>
+           <input type="number" value="${dispensed}" min="0" max="${it.qty}" 
+             style="width:52px;background:rgba(0,201,167,0.1);border:1px solid rgba(0,201,167,0.3);border-radius:6px;color:#00c9a7;font-family:Cairo,sans-serif;font-size:12px;padding:3px 6px;text-align:center;"
+             onchange="editOrderItem('${o.id}',${i},this.value)">`
+        : `<strong style="color:#e2e8f0;">${it.qty}</strong>${it.dispensed !== undefined && it.dispensed !== it.qty ? ` <span style="color:#00c9a7;font-size:11px;">(صُرف: ${it.dispensed})</span>` : ''}`;
+      return `<div style="font-size:12px;color:#94a3b8;padding:5px 0;border-bottom:1px solid rgba(255,255,255,0.04);display:flex;align-items:center;gap:6px;flex-wrap:wrap;">
+        <span style="min-width:16px;">${i+1}.</span>
+        <span style="flex:1;">${it.drugName} <span style="color:#64748b;">(${it.pct}%)</span></span>
+        <span style="display:flex;align-items:center;gap:4px;">${qtyDisplay} ${it.unit}</span>
+      </div>`;
+    }).join('');
+
+    // أزرار المدير فقط
+    let adminBtns = '';
+    if (isAdmin) {
+      if (o.status === 'pending') {
+        adminBtns = `
+          <div style="display:flex;gap:8px;flex-wrap:wrap;">
+            <button onclick="markOrderDone('${o.id}')" style="background:rgba(16,185,129,0.15);color:#10b981;border:1px solid rgba(16,185,129,0.3);border-radius:8px;padding:7px 14px;font-family:Cairo,sans-serif;font-size:12px;font-weight:700;cursor:pointer;">✅ تم الصرف</button>
+            <button onclick="rejectOrder('${o.id}')" style="background:rgba(239,68,68,0.1);color:#ef4444;border:1px solid rgba(239,68,68,0.25);border-radius:8px;padding:7px 14px;font-family:Cairo,sans-serif;font-size:12px;cursor:pointer;">❌ رفض</button>
+          </div>`;
+      } else {
+        adminBtns = `<button onclick="markOrderPending('${o.id}')" style="background:rgba(255,255,255,0.06);color:#94a3b8;border:1px solid rgba(255,255,255,0.1);border-radius:8px;padding:7px 14px;font-family:Cairo,sans-serif;font-size:12px;cursor:pointer;">↩️ إعادة للانتظار</button>`;
+      }
+    }
+
+    return `
+    <div style="background:${bgColor};border:1px solid ${borderColor};border-radius:12px;padding:14px;margin-bottom:10px;">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px;flex-wrap:wrap;margin-bottom:10px;">
+        <div>
+          <div style="font-weight:700;font-size:14px;margin-bottom:4px;">${o.id} ${statusBadge}</div>
+          <div style="font-size:12px;color:#94a3b8;">👤 ${o.name} &nbsp;|&nbsp; 🏥 ${o.dept} &nbsp;|&nbsp; ${priorityIcon} ${o.priority}</div>
+          <div style="font-size:11px;color:#64748b;margin-top:2px;">📅 ${o.miladi} — ${o.hijri}</div>
+          ${o.rejectReason ? `<div style="font-size:11px;color:#ef4444;margin-top:4px;">سبب الرفض: ${o.rejectReason}</div>` : ''}
+        </div>
+        ${adminBtns}
+      </div>
+      <div style="background:rgba(0,0,0,0.2);border-radius:8px;padding:8px;">
+        <div style="font-size:11px;font-weight:700;color:#94a3b8;margin-bottom:6px;">💊 الأدوية (${o.items.length} صنف)${isAdmin && o.status==='pending' ? ' — عدّلي الكمية المصروفة فعلياً قبل التأكيد' : ''}:</div>
+        ${itemsHtml}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ======== USER SYSTEM ========
+const USERS = [
+  { username: 'admin',   password: 'admin123',  name: 'أسماء',   role: 'admin'  },
+  { username: 'user1',   password: 'user1pass', name: 'موظف 1',  role: 'staff'  },
+  { username: 'user2',   password: 'user2pass', name: 'موظف 2',  role: 'staff'  },
+  { username: 'user3',   password: 'user3pass', name: 'موظف 3',  role: 'staff'  },
+  { username: 'user4',   password: 'user4pass', name: 'موظف 4',  role: 'staff'  },
+];
+
+let currentUser = null;
+
+function doLogin() {
+  const u = document.getElementById('loginUser').value.trim();
+  const p = document.getElementById('loginPass').value;
+  const user = USERS.find(x => x.username === u && x.password === p);
+  if (!user) {
+    document.getElementById('loginError').style.display = 'block';
+    return;
+  }
+  currentUser = user;
+  document.getElementById('loginScreen').style.display = 'none';
+  document.getElementById('userBadge').textContent = '👤 ' + user.name + (user.role==='admin' ? ' (مديرة)' : '');
+  // الكل يشوف نفس الواجهة - الموظف يشوف طلباته فقط في تبويب الطلبات
+  showTab('inventory');
+  // تعبئة اسم المسؤول تلقائياً
+  document.getElementById('reqName').value = user.name;
+  renderOrders();
+}
+
+function doLogout() {
+  currentUser = null;
+  orders = [];
+  document.getElementById('loginScreen').style.display = 'flex';
+  document.getElementById('loginUser').value = '';
+  document.getElementById('loginPass').value = '';
+  document.getElementById('loginError').style.display = 'none';
+  document.getElementById('userBadge').textContent = '';
+}
+
+function rejectOrder(id) {
+  const reason = prompt('سبب الرفض (اختياري):') ;
+  if (reason === null) return; // ضغط إلغاء
+  const o = orders.find(x => x.id === id);
+  if (o) {
+    o.status = 'rejected';
+    o.rejectReason = reason || '';
+    persistOrders();
+    renderOrders();
+    showToast('❌ تم رفض الطلب ' + id);
+  }
+}
+
+function editOrderItem(orderId, itemIdx, newVal) {
+  const o = orders.find(x => x.id === orderId);
+  if (o) {
+    const val = Math.max(0, parseInt(newVal) || 0);
+    o.items[itemIdx].dispensed = val;
+    persistOrders();
+  }
+}
+
+window.onload = function() {
+  loadOrders();
+  document.getElementById('headerDate').innerHTML =
+    getMiladi() + '<br><span style="font-size:10px;">' + getHijri() + '</span>';
+  document.getElementById('reqDate').value = new Date().toISOString().split('T')[0];
+  orderCounter = 1000;
+  document.getElementById('reqNum').value = 'REQ-' + (orderCounter + 1);
+  renderAll();
+};
 </script>
 </body>
 </html>
