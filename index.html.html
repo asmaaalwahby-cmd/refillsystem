@@ -909,7 +909,7 @@ async function saveOrder(reqNum, name, dept, date, hijri, miladi, priority, item
       requester_name: name,
       dept: dept,
       date_miladi: miladi,
-      date_hijri: hijri,
+      hijri: hijri,
       priority: priority,
       status: 'pending',
       items: items,
@@ -929,13 +929,13 @@ function persistOrders() {
 
 async function loadOrders() {
   try {
-    const data = await sbFetch('orders?order=created_at.desc');
+    const data = await sbFetch('orders?order=req_num.desc');
     orders = (data || []).map(r => ({
       id: r.req_num,
       name: r.requester_name,
       dept: r.dept,
       date: r.date_miladi,
-      hijri: r.date_hijri,
+      hijri: r.hijri,
       miladi: r.date_miladi,
       priority: r.priority,
       status: r.status,
@@ -1132,10 +1132,10 @@ function editOrderItem(orderId, itemIdx, newVal) {
 
 async function loadDrugsFromDB() {
   try {
-    const data = await sbFetch('drugs?order=id.asc');
+    const data = await sbFetch('drugs?order=name.asc');
     if (data && data.length > 0) {
-      drugs = data.map(r => ({
-        id: r.id,
+      drugs = data.map((r, i) => ({
+        id: i + 1,
         name: r.name,
         conc: r.conc,
         unit: r.unit,
