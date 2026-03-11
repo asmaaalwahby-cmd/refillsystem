@@ -427,6 +427,30 @@ tr:hover td { background:rgba(255,255,255,0.03); }
 <div class="toast" id="toast"></div>
 
 <script>
+// ======== SUPABASE CONFIG ========
+const SUPABASE_URL = 'https://kdbdoezbfwasnypbfubo.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtkYmRvZXpiZndhc255cGJmdWJvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzMxMzc0NjAsImV4cCI6MjA4ODcxMzQ2MH0.zfnlUoPkHJxmhU_moAFfh4vD_jJBXdr-MSsOvUO8wRc';
+
+async function sbFetch(path, method='GET', body=null) {
+  const opts = {
+    method,
+    headers: {
+      'Content-Type': 'application/json',
+      'apikey': SUPABASE_KEY,
+      'Authorization': 'Bearer ' + SUPABASE_KEY,
+      'Prefer': method === 'POST' ? 'return=representation' : ''
+    }
+  };
+  if (body) opts.body = JSON.stringify(body);
+  const res = await fetch(SUPABASE_URL + '/rest/v1/' + path, opts);
+  if (!res.ok) {
+    const err = await res.text();
+    throw new Error(err);
+  }
+  const text = await res.text();
+  return text ? JSON.parse(text) : null;
+}
+
 // ======== DATA ========
 let drugs = [
   { id: 1, name: 'بروبوفول Propofol', conc: '10 mg/ml', unit: 'أمبول', current: 8,  max: 50, cat: 'تخدير عام' },
@@ -825,17 +849,25 @@ function addNewDrug() {
   const max  = parseInt(document.getElementById('addMax').value) || 30;
   if (!name) { showToast('⚠️ أدخل اسم الدواء'); return; }
   const newId = Math.max(...drugs.map(d => d.id)) + 1;
-  drugs.push({ id: newId, name, conc, unit, current: cur, max, cat });
+  const newDrug = { id: newId, name, conc, unit, current: cur, max, cat };
+  drugs.push(newDrug);
   ['addName','addConc'].forEach(id => document.getElementById(id).value = '');
   document.getElementById('addCurrent').value = 0;
   document.getElementById('addMax').value = 30;
   renderAll();
   showToast('✅ تم إضافة ' + name);
+  // حفظ في Supabase
+  sbFetch('drugs', 'POST', { name, conc, unit, current_stock: cur, max_stock: max, category: cat })
+    .catch(e => console.error('addDrug error:', e));
 }
 
 function updateStock(id, val) {
   const d = drugs.find(x => x.id === id);
-  if (d) { d.current = Math.max(0, parseInt(val) || 0); renderStats(); renderInventory(); renderAlerts(); }
+  if (d) {
+    d.current = Math.max(0, parseInt(val) || 0);
+    renderStats(); renderInventory(); renderAlerts();
+    updateDrugStock(id, d.current);
+  }
 }
 
 // ======== TABS ========
@@ -860,37 +892,90 @@ function showToast(msg) {
 let orders = [];
 let ordersFilter = 'all';
 
-function saveOrder(reqNum, name, dept, date, hijri, miladi, priority, items) {
-  orders.unshift({
+async function saveOrder(reqNum, name, dept, date, hijri, miladi, priority, items) {
+  const newOrder = {
     id: reqNum,
     name, dept, date, hijri, miladi, priority,
     items,
     status: 'pending',
     createdAt: new Date().toLocaleString('ar-SA')
-  });
-  persistOrders();
+  };
+  orders.unshift(newOrder);
   renderOrders();
+
+  try {
+    await sbFetch('orders', 'POST', {
+      req_num: reqNum,
+      requester_name: name,
+      dept: dept,
+      date_miladi: miladi,
+      date_hijri: hijri,
+      priority: priority,
+      status: 'pending',
+      items: items,
+      reject_reason: ''
+    });
+  } catch(e) {
+    console.error('saveOrder to Supabase error:', e);
+    // fallback localStorage
+    try { localStorage.setItem('sys_orders', JSON.stringify(orders)); } catch(e2) {}
+  }
 }
 
 function persistOrders() {
-  try { localStorage.setItem('sys_orders', JSON.stringify(orders)); } catch(e) {}
+  // update status in Supabase
+  // called by markDone / markPending / reject
 }
 
-function loadOrders() {
+async function loadOrders() {
   try {
-    const saved = localStorage.getItem('sys_orders');
-    if (saved) orders = JSON.parse(saved);
-  } catch(e) { orders = []; }
+    const data = await sbFetch('orders?order=created_at.desc');
+    orders = (data || []).map(r => ({
+      id: r.req_num,
+      name: r.requester_name,
+      dept: r.dept,
+      date: r.date_miladi,
+      hijri: r.date_hijri,
+      miladi: r.date_miladi,
+      priority: r.priority,
+      status: r.status,
+      items: r.items || [],
+      rejectReason: r.reject_reason || '',
+      createdAt: r.created_at,
+      dbId: r.id
+    }));
+    renderOrders();
+  } catch(e) {
+    console.error('loadOrders error:', e);
+    // fallback to localStorage
+    try {
+      const saved = localStorage.getItem('sys_orders');
+      if (saved) orders = JSON.parse(saved);
+    } catch(e2) { orders = []; }
+    renderOrders();
+  }
 }
 
-function markOrderDone(id) {
+async function markOrderDone(id) {
   const o = orders.find(x => x.id === id);
-  if (o) { o.status = 'done'; persistOrders(); renderOrders(); showToast('✅ تم الصرف ' + id); }
+  if (!o) return;
+  o.status = 'done';
+  renderOrders();
+  showToast('✅ تم الصرف ' + id);
+  try {
+    await sbFetch('orders?req_num=eq.' + encodeURIComponent(id), 'PATCH', { status: 'done', dispensed_at: new Date().toISOString() });
+  } catch(e) { console.error('markDone error:', e); }
 }
 
-function markOrderPending(id) {
+async function markOrderPending(id) {
   const o = orders.find(x => x.id === id);
-  if (o) { o.status = 'pending'; persistOrders(); renderOrders(); showToast('↩️ تم إعادة الطلب للانتظار'); }
+  if (!o) return;
+  o.status = 'pending';
+  renderOrders();
+  showToast('↩️ تم إعادة الطلب للانتظار');
+  try {
+    await sbFetch('orders?req_num=eq.' + encodeURIComponent(id), 'PATCH', { status: 'pending', reject_reason: '' });
+  } catch(e) { console.error('markPending error:', e); }
 }
 
 function filterOrders(type, btn) {
@@ -1022,17 +1107,18 @@ function doLogout() {
   document.getElementById('userBadge').textContent = '';
 }
 
-function rejectOrder(id) {
-  const reason = prompt('سبب الرفض (اختياري):') ;
-  if (reason === null) return; // ضغط إلغاء
+async function rejectOrder(id) {
+  const reason = prompt('سبب الرفض (اختياري):');
+  if (reason === null) return;
   const o = orders.find(x => x.id === id);
-  if (o) {
-    o.status = 'rejected';
-    o.rejectReason = reason || '';
-    persistOrders();
-    renderOrders();
-    showToast('❌ تم رفض الطلب ' + id);
-  }
+  if (!o) return;
+  o.status = 'rejected';
+  o.rejectReason = reason || '';
+  renderOrders();
+  showToast('❌ تم رفض الطلب ' + id);
+  try {
+    await sbFetch('orders?req_num=eq.' + encodeURIComponent(id), 'PATCH', { status: 'rejected', reject_reason: reason || '' });
+  } catch(e) { console.error('rejectOrder error:', e); }
 }
 
 function editOrderItem(orderId, itemIdx, newVal) {
@@ -1044,8 +1130,36 @@ function editOrderItem(orderId, itemIdx, newVal) {
   }
 }
 
+async function loadDrugsFromDB() {
+  try {
+    const data = await sbFetch('drugs?order=id.asc');
+    if (data && data.length > 0) {
+      drugs = data.map(r => ({
+        id: r.id,
+        name: r.name,
+        conc: r.conc,
+        unit: r.unit,
+        current: r.current_stock,
+        max: r.max_stock,
+        cat: r.category
+      }));
+    }
+  } catch(e) {
+    console.error('loadDrugs error:', e);
+    // keep hardcoded drugs as fallback
+  }
+  await loadOrders();
+  renderAll();
+}
+
+async function updateDrugStock(drugId, newStock) {
+  try {
+    await sbFetch('drugs?id=eq.' + drugId, 'PATCH', { current_stock: newStock });
+  } catch(e) { console.error('updateDrugStock error:', e); }
+}
+
 window.onload = function() {
-  loadOrders();
+  loadDrugsFromDB();
   document.getElementById('headerDate').innerHTML =
     getMiladi() + '<br><span style="font-size:10px;">' + getHijri() + '</span>';
   document.getElementById('reqDate').value = new Date().toISOString().split('T')[0];
