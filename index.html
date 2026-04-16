@@ -904,17 +904,18 @@ async function saveOrder(reqNum, name, dept, date, hijri, miladi, priority, item
   renderOrders();
 
   try {
-    await sbFetch('orders', 'POST', {
+    const payload = {
       req_num: reqNum,
       requester_name: name,
       dept: dept,
-      date_miladi: miladi,
-      date_hijri: hijri,
       priority: priority,
       status: 'pending',
       items: items,
       reject_reason: ''
-    });
+    };
+    if (miladi) payload.date_miladi = miladi;
+    if (hijri) payload.hijri = hijri;
+    await sbFetch('orders', 'POST', payload);
   } catch(e) {
     console.error('saveOrder to Supabase error:', e);
     // fallback localStorage
@@ -929,13 +930,13 @@ function persistOrders() {
 
 async function loadOrders() {
   try {
-    const data = await sbFetch('orders?order=created_at.desc');
+    const data = await sbFetch('orders?order=id.desc');
     orders = (data || []).map(r => ({
       id: r.req_num,
       name: r.requester_name,
       dept: r.dept,
       date: r.date_miladi,
-      hijri: r.date_hijri,
+      hijri: r.hijri,
       miladi: r.date_miladi,
       priority: r.priority,
       status: r.status,
@@ -989,7 +990,7 @@ function renderOrders() {
   const list = document.getElementById('ordersList');
   const isAdmin = currentUser && currentUser.role === 'admin';
 
-  let filtered = orders.filter(o => {
+  let filtered = (orders || []).filter(o => { if (!o || !o.name) return false;
     // موظف يشوف طلباته فقط
     if (!isAdmin && o.name !== currentUser.name) return false;
     if (ordersFilter === 'pending') return o.status === 'pending';
@@ -1132,7 +1133,7 @@ function editOrderItem(orderId, itemIdx, newVal) {
 
 async function loadDrugsFromDB() {
   try {
-    const data = await sbFetch('drugs?order=id.asc');
+    const data = await sbFetch('drugs');
     if (data && data.length > 0) {
       drugs = data.map(r => ({
         id: r.id,
@@ -1154,7 +1155,7 @@ async function loadDrugsFromDB() {
 
 async function updateDrugStock(drugId, newStock) {
   try {
-    await sbFetch('drugs?id=eq.' + drugId, 'PATCH', { current_stock: newStock });
+    await sbFetch('drugs?id=eq.' + encodeURIComponent(drugId), 'PATCH', { current_stock: newStock });
   } catch(e) { console.error('updateDrugStock error:', e); }
 }
 
